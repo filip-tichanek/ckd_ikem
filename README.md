@@ -50,6 +50,16 @@ This repository contains the R code and data wrangling for our study on CKD scre
 
 7/ What is the estimated clinical benefit, in terms of dialysis-free months saved per patient, if all eligible individuals were treated according to current guidelines?
 
+## Project structure
+
+The repository is organized as follows:
+
+* **quarto/736_code01.qmd**: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
+* **r/**: Supporting R scripts and initialization.
+    * **r/736_initiation.R**: Initialization script for loading libraries and global constants.
+    * **r/functions/**: Custom R functions 
+* **data/**: Directory containing the .rds datasets and .md metadata
+
 ## Datasets 
 
 All data needed for the analysis are available in the `.rds` format in Zenodo as well as GitHub repository. There are two datasets:
@@ -121,5 +131,5 @@ All data needed for the analysis are available in the `.rds` format in Zenodo as
 
 # Statistical methods
 
-Statistical modelling is described in detail in [this section](https://filip-tichanek.github.io/ckd_ikem/#statistical-methods) of the statistical report. 
+Statistical modelling is described in detail in [this section](https://filip-tichanek.github.io/ckd_ikem/##statistical-methods) of the statistical report. 
 
