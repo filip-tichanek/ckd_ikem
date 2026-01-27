@@ -44,7 +44,7 @@ This repository contains the R code and data wrangling for our study on CKD scre
 
 4/ What are the primary clinical risk factors associated with CKD in this setting?
 
-5/ What is the prevalence of previously undetected CKD, and which factors are associated with being undiagnosed?
+5/ What is the prevalence of previously undetected CKD, and which factors are associated with new CKD cases?
 
 6/ What proportion of eligible CKD patients are currently not receiving indicated renoprotective therapies (the treatment gap)?
 
@@ -56,7 +56,7 @@ All data needed for the analysis are available in the `.rds` format in Zenodo as
 
 1/ `data_ckd.rds` are primarily data needed to asnwer the questions #1 to #6. This includes the data of 2903 patients, with each row representing one patient. 
 
-2/ `data_survival.rds` are data that help to solve the question #7, specifically historical data of patient in our institutaion that are needed for predictinng remaining survival to estimate a possible prolongation of dialysis-free survival when eligible (but not currently used) medication is taken. 
+2/ `data_survival.rds` contains historical data used for Cox proportional hazards modeling to address question #7. These data allow for the prediction of remaining survival and the estimation of potential gain in dialysis-free survival following the initiation of indicated renoprotective therapies.
 
 ### `data_ckd.rds` data dictionary
 
