@@ -1,0 +1,20 @@
+{
+  "title": "Chronic Kidney Disease Among Outpatients in a Central European Tertiary Care Centre: High Prevalence and Inadequate Treatment",
+  "creators": [
+    {"name": "Zahradka, Ivan", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Petr, Vojtech", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Tichanek, Filip", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Chroma, Adriana", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Neskudla, Tomas", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Kahle, Michal", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Bem, Robert", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Trunecka, Pavel", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Adamkova, Vera", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Hruba, Petra", "affiliation": "Institute for Clinical and Experimental Medicine"},
+    {"name": "Hlavac, Ivo", "affiliation": "University of Ostrava"},
+    {"name": "Viklicky, Ondrej", "affiliation": "Institute for Clinical and Experimental Medicine"}
+  ],
+  "description": "De-identified participant data and complete analytical code for the study of CKD prevalence and treatment gap.",
+  "access_right": "open",
+  "license": "cc-by-4.0"
+}
