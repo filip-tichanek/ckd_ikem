@@ -30,7 +30,7 @@ Statistical **report** can be found [here](https://filip-tichanek.github.io/ckd_
 Original [GitHub repository](https://github.com/filip-tichanek/ckd_ikem): https://github.com/filip-tichanek/ckd_ikem.     
 The repository is organized as follows:
 
-* quarto/736_code01.qmd: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
+* `quarto/736_code01.qmd`: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
 * `r/`: Supporting R scripts and initialization.
     * `r/736_initiation.R`: Initialization script for loading libraries and global constants.
     * `r/functions/`: Custom R functions 
