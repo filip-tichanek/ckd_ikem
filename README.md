@@ -24,9 +24,17 @@ When using this code or data, cite the original publication:
 
 ---------------------------------------------------------------------------------------------------
 
-Original [GitHub repository](https://github.com/filip-tichanek/ckd_ikem): https://github.com/filip-tichanek/ckd_ikem
+Statistical **reports** can be found [here](https://filip-tichanek.github.io/ckd_ikem/): https://filip-tichanek.github.io/ckd_ikem/   
 
-Statistical **reports** can be found [here](https://filip-tichanek.github.io/ckd_ikem/): https://filip-tichanek.github.io/ckd_ikem/
+
+Original [GitHub repository](https://github.com/filip-tichanek/ckd_ikem): https://github.com/filip-tichanek/ckd_ikem.     
+The repository is organized as follows:
+
+* **quarto/736_code01.qmd**: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
+* **r/**: Supporting R scripts and initialization.
+    * **r/736_initiation.R**: Initialization script for loading libraries and global constants.
+    * **r/functions/**: Custom R functions 
+* **data/**: Directory containing the .rds datasets and .md metadata
 
 ----------------------------------------------------------------------------------------------------
 
@@ -50,15 +58,6 @@ This repository contains the R code and data wrangling for our study on CKD scre
 
 7/ What is the estimated clinical benefit, in terms of dialysis-free months saved per patient, if all eligible individuals were treated according to current guidelines?
 
-## Project structure
-
-The repository is organized as follows:
-
-* **quarto/736_code01.qmd**: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
-* **r/**: Supporting R scripts and initialization.
-    * **r/736_initiation.R**: Initialization script for loading libraries and global constants.
-    * **r/functions/**: Custom R functions 
-* **data/**: Directory containing the .rds datasets and .md metadata
 
 ## Datasets 
 
