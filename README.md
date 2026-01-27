@@ -24,17 +24,17 @@ When using this code or data, cite the original publication:
 
 ---------------------------------------------------------------------------------------------------
 
-Statistical **reports** can be found [here](https://filip-tichanek.github.io/ckd_ikem/): https://filip-tichanek.github.io/ckd_ikem/   
+Statistical **report** can be found [here](https://filip-tichanek.github.io/ckd_ikem/): https://filip-tichanek.github.io/ckd_ikem/   
 
 
 Original [GitHub repository](https://github.com/filip-tichanek/ckd_ikem): https://github.com/filip-tichanek/ckd_ikem.     
 The repository is organized as follows:
 
-* **quarto/736_code01.qmd**: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
-* **r/**: Supporting R scripts and initialization.
-    * **r/736_initiation.R**: Initialization script for loading libraries and global constants.
-    * **r/functions/**: Custom R functions 
-* **data/**: Directory containing the .rds datasets and .md metadata
+* quarto/736_code01.qmd: Primary analysis script. It contains the complete workflow to answer all research questions, including data processing, statistical modeling, and generation of results.
+* r/: Supporting R scripts and initialization.
+    * `r/736_initiation.R`: Initialization script for loading libraries and global constants.
+    * `r/functions/`: Custom R functions 
+* `data/`: Directory containing the .rds datasets and .md metadata
 
 ----------------------------------------------------------------------------------------------------
 
