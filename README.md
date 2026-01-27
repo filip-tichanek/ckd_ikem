@@ -121,5 +121,5 @@ All data needed for the analysis are available in the `.rds` format in Zenodo as
 
 # Statistical methods
 
-Statistical modelling is described in detail in [this section](https://filip-tichanek.github.io/ckd_ikem/#statistical-modelling-description) of the statistical report. 
+Statistical modelling is described in detail in [this section](https://filip-tichanek.github.io/ckd_ikem/#statistical-methods) of the statistical report. 
 
