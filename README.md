@@ -1,7 +1,7 @@
 **Authors and affiliations**
 
 <div style="font-size: larger;">
-Ivan Zahradka<sup>1</sup>, Vojtech Petr<sup>1</sup>, Filip Tichanek<sup>3</sup>, Adriana Chroma<sup>1</sup>, Tomas Neskudla<sup>2</sup>, Michal Kahle<sup>2</sup>, Robert Bem<sup>3</sup>, Pavel Trunecka<sup>4</sup>, Vera Adamkova<sup>5</sup>, Petra Hruba<sup>6</sup>, Ivo Hlavac<sup>7</sup>, Ondrej Viklicky<sup>1,6</sup>
+Ivan Zahradka<sup>1</sup>, Vojtech Petr<sup>1</sup>, Filip Tichanek<sup>2</sup>, Adriana Chroma<sup>1</sup>, Tomas Neskudla<sup>2</sup>, Michal Kahle<sup>2</sup>, Robert Bem<sup>3</sup>, Pavel Trunecka<sup>4</sup>, Vera Adamkova<sup>5</sup>, Petra Hruba<sup>6</sup>, Ivo Hlavac<sup>7</sup>, Ondrej Viklicky<sup>1,6</sup>
 </div>
 
 <br>
