@@ -56,7 +56,7 @@ This repository contains the R code and data wrangling for our study on CKD scre
 
 6/ What proportion of eligible CKD patients are currently not receiving indicated renoprotective therapies (the treatment gap)?
 
-7/ What is the estimated clinical benefit, in terms of dialysis-free months saved per patient, if all eligible individuals were treated according to current guidelines?
+7/ What is the model-projected gain in dialysis-free time if all eligible individuals received guideline-recommended renoprotective treatment?
 
 
 ## Datasets 
@@ -127,8 +127,4 @@ All data needed for the analysis are available in the `.rds` format in Zenodo as
 | `time` | Numeric | Follow-up time (years) from entry to event or censoring | Years |
 | `event` | Numeric (Binary) | Mortality indicator (status) | 0: Alive/Censored, 1: Dead |
 
-
-# Statistical methods
-
-Statistical modelling is described in detail in [this section](https://filip-tichanek.github.io/ckd_ikem/#statistical-methods) of the statistical report. 
 
