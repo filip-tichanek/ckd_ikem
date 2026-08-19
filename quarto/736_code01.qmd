@@ -63,69 +63,6 @@ body {
 
 {{< include ../README.md >}}
 
-All statistical analyses were performed using R, version 4.4.3 (2025-02-28) [@Rcomp]. Data visualizations were done with the 'ggplot2' package, version [@ggplot2].
-
-## Sample size calculation
-
-We aimed to determine the minimum sample size required to achieve at least a 90% probability that the two-sided 95% confidence interval (CI) for the estimated prevalence of chronic kidney disease would have a total width of less than 5 percentage points, given the prevalence estimated from participants enrolled up to March 1, 2025.
-
-The sample size calculation was performed using a simulation-based (Monte Carlo) procedure:
-
-1.  Using data collected up to March 1, 2025, we estimated the prevalence of chronic kidney disease at 32.5%. This value was taken as the underlying population prevalence for all subsequent simulations.
-
-2.  We considered candidate total sample sizes from 1,000 to 2,000 in increments of 25.
-
-3.  For each candidate sample size `n`, we generated 2000 artificial datasets, each representing n independent Bernoulli outcomes with probability of “case” equal to 32.5% (i.e., binomial samples of size n with event probability 0.325).
-
-4.  For each simulated dataset, we computed a two-sided 95% Clopper–Pearson (exact) confidence interval for the prevalence using the `binom.test` function in R (which implements the exact binomial method), and we calculated the total width of this interval as the difference between its upper and lower limits.
-
-5.  For each candidate sample size, we then estimated the probability of achieving the desired precision by calculating the proportion of the 2000 simulated datasets in which the 95% confidence interval width was less than 5 percentage points.
-
-6.  The required sample size was defined as the smallest n for which at least 90% of the simulated datasets yielded a two-sided 95% Clopper–Pearson confidence interval with total width below 5 percentage points.
-
-## Age-specific estimates of prevalence
-
-To obtain age-specific estimates of CKD based on either the standard eGFR threshold or the age-calibrated eGFR threshold [@Delanaye2016], we used Bayesian logistic regression with a thin-plate spline implemented in the ‘brms’ R package [@brms-3], using default brms priors (intercept: student_t(3, –0.5368, 100); spline standard deviations: student_t(3, 0, 2.5)). Separate splines were fitted for patients in the screening cohort as well as unscreened. We report estimated prevalence for the screening cohort and for all patients combined (enriched cohort), obtained as a weighted estimates for both screened and unscreened patients according to the cohort proportions. Estimates represent posterior medians for a given age; 95% credible intervals (95% CrI) correspond to the 2.5th and 97.5th percentiles of the posterior.
-
-All Bayesian models (including those described below) were run with two chains of Hamiltonian Monte-Carlo sampling, each with 7000 iterations (2000 warm-up), and were checked for convergence and autocorrelation of samples.
-
-## Clinical factors associated with presence of CKD
-
-We evaluated how demographic and clinical factors relate to CKD status, defined by three distinct outcomes: CKD based on the standard eGFR threshold, CKD based on the age-calibrated eGFR threshold [@Delanaye2016], and newly detected CKD.
-
-*Unadjusted estimates*
-
-For each predictor–outcome combination, we fitted an unadjusted logistic regression model with that single predictor and the corresponding CKD status as the binary outcome. Continuous predictors with wide variability (BMI, age) were rescaled to achieve an SD close to 0.5, ensuring that effect sizes (odds ratios \[OR\]) were comparable with those of binary predictors and not driven by scale differences. Age was expressed as a continuous variable scaled so that one unit corresponded to a 30-year difference, and we also evaluated a binary indicator for age above 60. BMI was scaled by $10\ kg/m^2$, so that a one-unit increase corresponded to a $10\ kg/m^2$ change. The predictors assessed were age (scaled), age \> 60 (binary), female sex (binary), BMI (scaled), non-renal transplantation (binary), Diabetes Mellitus type 1 (*T1DM*, binary), Diabetes Mellitus type 2 (*T2DM*, binary), and any Diabetes Mellitus (binary). Atherosclerotic cardiovascular disease–related variables included stroke (binary), peripheral artery disease (binary), ischemic heart disease (binary), and a combined *ASCVD* indicator (binary). Additional cardiovascular variables were arterial hypertension (binary), atrial fibrillation (binary), heart failure (binary), and a combined indicator capturing either heart failure or atrial fibrillation. Charlson comorbidity burden was represented either as a continuous predictor $log_2(\text{Charlson index} + 1)$ or as a binary indicator for Charlson index ≥ 5. Liver steatosis (binary) was also evaluated. Unadjusted models were run separately for the screening cohort (patients with consent) and for the enriched cohort (patients in the screening cohort as well as unscreened patients). Because BMI was missing for 20 patients in the screening cohort and 10 unscreened (consent = 0; 30 patients in the enriched cohort in total) and was assumed to be missing at random, these models were fitted using complete-case analysis (all available observations for each given predictor).
-
-*Multivariable models*
-
-We next aimed to construct multivariable Bayesian logistic models for all three CKD outcomes defined above (CKD based on the standard eGFR threshold, CKD based on the age-calibrated eGFR threshold [@Delanaye2016], and newly detected CKD), fitted with the 'brms' R package [@brms-3]. In these models, screening status (screened: 0/1, with patients in screening cohort having the value 1, unscreened patients having the value 0) was included as an interaction term with all predictors, allowing effect sizes to be estimated for both the screening and pre-screened cohorts while enabling information sharing between them through a relatively narrower prior on the interaction, and mainly also for combining the estimates of both for all patients (enriched cohort). Predictors were selected based on clinical knowledge, correlations between candidate predictors (to avoid strong collinearity), and unadjusted effect sizes (unadjusted OR \< 4/5 or \> 5/4). The final predictor set included female sex, age (scaled to 30 years), non-renal transplantation, T1DM, T2DM, liver steatosis, arterial hypertension, ASCVD, and heart failure or atrial fibrillation (binary variable combining the two). BMI was excluded because their unadjusted associations with CKD status were small. “Any Diabetes” was not included because T1DM and T2DM differed markedly in their association with CKD risk in unadjusted analysis. The combined ASCVD indicator was preferred over individual components (stroke, PAD, IHD) because their associations with CKD were similar and the subtypes were intercorrelated. As atrial fibrillation and heart failure were relatively rare and correlated, their combination provided a more stable and precise estimate and was thus selected. Charlson index was excluded because it is a non-specific summary variable that showed correlation (\|rho\| \> 0.3) with three other predictors.
-
-Priors were chosen as follows: for the intercept, a Student-t prior with $df = 3$, $\mu = logit(\text{observed prevalence})$, and $\sigma = 100$. Priors for main effects were Gaussian with $\mu = 0$ and $\sigma = 5$. Priors for the interaction terms “\[main effect\] : screened” were Gaussian with $\mu = 0$ and $\sigma = 1$. Effects are expressed as odds ratios with uncertainty presented as 95% credible intervals (95% CrI; 2.5th and 97.5th percentiles of the posterior, with the posterior median reported as the point estimate). Effects are shown for the screening cohort (‘consent’ = 1) as well as for the enriched cohort, obtained by combining the main effect with the interaction term weighted by the proportion of patients in screening among all patients.
-
-## Potential months from dialysis saved by treatment
-
-Using the most recent eGFR value and the treatment currently used by each laboratory-confirmed CKD patient, together with literature-based estimates of chronic eGFR slopes under different therapeutic regimens, and cox-regression based individual prediction of further survival (based on data of 2748 patients in our centre) we aimed to estimate how many months free from dialysis could potentially be gained if all eligible patients received the corresponding treatment.
-
-To estimate the expected time to dialysis initiation under current treatment and under hypothetical optimized treatment, we used published mean annual chronic eGFR slopes. For the placebo/reference slope (partly reflecting background RAASi use), we used the estimate from the dapagliflozin NEJM trial (−3.59 ml/min/year; [@heerspink2020]). Treatment-specific slope differences were then applied additively: the SGLT2 inhibitor effect (increase by 2.43 to −1.67 ml/min/year) from the same NEJM trial [@heerspink2020], the GLP-1 receptor agonist effect (increase by 1.16 to −2.43 ml/min/year) from the FLOW trial [@perkovic2024], and the finerenone effect (increase by 0.93 to −2.66 ml/min/year) from Bakris et al. [@bakris2020a]. Treatment-class effects were assumed to act additively on chronic eGFR decline, consistent with the meta-analysis by Neuen et al. (2024) [@neuen2024], which reported only small and statistically non-significant heterogeneity in GLP-1 receptor agonist effects between SGLT2 inhibitor users and non-users. -0.5 was set as the minimum possible eGFR slope. As a sensitivity analysis, we assumed only partial additivity of treatment effects. The treatment with the largest estimated slope improvement was applied at its full effect, whereas each additional treatment was assumed to contribute only 50% of its monotherapy effect. This prevents implausible combined improvements in chronic eGFR slope (i.e., positive eGFR slopes) that can arise under full additivity.
-
-For each patient, we constructed an individual chronic eGFR slope under (i) the current treatment and (ii) a hypothetical “optimized treatment” that assumed initiation of all medications for which the patient met eligibility criteria. For each scenario, the expected time from current eGFR to eGFR = 10 ml/min (threshold for renal failure requiring dialysis or transplantation) was computed. These values represent dialysis-free years ignoring mortality. To incorporate mortality, a separate multivariable Cox model was fitted with the 'coxph' function of the 'survival' package [@survival] to estimate each patient’s remaining life expectancy. Predictors included transplant status, Diabetes Mellitus, hypertension, sex, heart failure or atrial fibrillation, ASCVD, liver steatosis, CKD record, and a spline for age. Survival data were obtained from the electronic health system of our centre, combining datasets from cardiology, diabetology, hepatology and surgery ambulances (years 2013 and 2015), and — solely to extend the time span and allow estimation of longer-term survival — 46 patients after non-renal transplantation with very early historical data (years 1986–1990, 1995, 2002). When a patient appeared in more than one table, only the earliest record was retained.
-
-### Imputation of missing clinical variables
-
-Because our interest was in predicted survival rather than precise uncertainty estimates, we used a single stochastic imputation (m = 1) implemented via the *mice* R package [@mice]. Variables that must not be imputed (patient identifiers, dates, survival time, event indicator) were excluded from the imputation model and removed from the predictor matrix. Binary clinical variables (diabetes, hypertension, steatosis, atrial fibrillation, heart failure, stroke, atherosclerotic disease) were coded as binary factors and imputed using logistic regression ('logreg' method). Continuous predictors were imputed using the default *mice* settings -- predictive mean matching. After imputation, binary variables were converted back to numeric 0/1. In total, data for 2748 patients were available, including 68 historical transplanted patients
-
-### Survival-corrected dialysis-free time and dialysis months saved
-
-For each patient and each treatment scenario, the survival-corrected dialysis-free time was defined as the minimum of (i) predicted time to eGFR reaching 10 ml/min and (ii) predicted remaining survival from the Cox model. If death was predicted to occur earlier than dialysis, the dialysis-free time was set to the expected survival.
-
-Dialysis-free months saved were then calculated as:
-
--   the difference between survival-corrected dialysis-free time (years) under hypothetical treatment and under current treatment,
--   multiplied by 12 to express the result in months.
-
-Separate estimates were obtained for initiating all eligible treatments, and for isolated treatment scenarios (SGLT2, GLP-1, or finerenone alone).
-
 # Initiation
 
 Upload initiation file
@@ -230,6 +167,21 @@ data_survival <- data_survival %>%
       FU_atherosclerosis_PAD,
       FU_stroke
     )
+  )
+```
+
+### `data_ckd_complete`
+
+Only these rows with BMI data (30 cases are thus excluded).
+Consent as factor
+
+```{r}
+data_ckd_complete <- data_ckd %>%
+  dplyr::filter(
+    !is.na(BMI_over30)
+  ) %>%
+  dplyr::mutate(
+    consent = factor(consent)
   )
 ```
 
@@ -760,6 +712,7 @@ prior_intercept <- prior_string(
       paste0("student_t(3, ", out_mean, ", 100)"), 
       class = "Intercept"
     )
+
 ```
 
 #### Fit simple mdoel
@@ -793,6 +746,7 @@ kableExtra::kable(
 
 ```{r}
 
+
 model_consent_spec <- run(
   expr = brm(
     identified_CKD_by_lab ~ consent,
@@ -809,13 +763,15 @@ model_consent_spec <- run(
   reuse = TRUE
 )
 
+
 prior_summary(model_consent_spec)
+
 summary(model_consent_spec, robust = TRUE)
 
 posterior <- as_draws_df(model_consent_spec) %>% 
   mutate(
     consent_prev = inv_logit(b_Intercept + b_consent),
-    enriched_prev = inv_logit(b_Intercept)
+    nonconsent_prev = inv_logit(b_Intercept)
     )
 
 tr <- posterior_epred(model_consent_spec)
@@ -826,7 +782,7 @@ kableExtra::kable(
     rbind(
       inv_logit(fixef(model_simple, robust = TRUE)[, c(1, 3, 4)]),
       quantile(tr2, probs = c(0.5, 0.025, 0.975)),
-      quantile(posterior$enriched_prev, probs = c(0.5, 0.025, 0.975)),
+      quantile(posterior$nonconsent_prev, probs = c(0.5, 0.025, 0.975)),
       quantile(posterior$consent_prev, probs = c(0.5, 0.025, 0.975))
     )
   ) %>%
@@ -853,6 +809,7 @@ quantile(posterior$consent_prev, probs = c(0.5, 0.025, 0.975))
 model_time_nl <- run(
   expr = brm(
     identified_CKD_by_lab ~
+      consent +
       s(I( (age-62) / 30), by = consent, k = 5),
     family = bernoulli(link = "logit"),
     data = data_ckd %>% dplyr::mutate(consent = factor(consent)),
@@ -867,8 +824,10 @@ model_time_nl <- run(
   reuse = TRUE
 )
 
+
 prior_summary(model_time_nl)
 summary(model_time_nl, robust = TRUE)
+
 ```
 
 #### Get posteriors
@@ -900,6 +859,8 @@ p0 <- posterior_epred(model_time_nl, newdata = new0)
 p1 <- posterior_epred(model_time_nl, newdata = new1)
 p_overall <- (1 - consent_prop) * p0 + consent_prop * p1
 
+
+
 summarize_epred <- function(mat, cohort) {
   posterior_summary(mat, robust = TRUE) %>%
     as.data.frame() %>%
@@ -915,6 +876,7 @@ prediction_NL <- dplyr::bind_rows(
   summarize_epred(p_overall, "enriched")
   ) %>%
   dplyr::mutate(age_calibrated = "No calibration")
+
 
 kableExtra::kable(
   prediction_NL %>%
@@ -1049,6 +1011,7 @@ model_complex_lin <- run(
       FU_atherosclerosis * consent +
       HF_or_AF * consent,
     data = data_ckd,
+    family = bernoulli(link = "logit"),
     backend = "cmdstanr",
     seed = 736,
     cores = 1, chains = 2,
@@ -1068,16 +1031,27 @@ exp(fixef(model_complex_lin, robust = TRUE))[,c(1, 3, 4)]
 
 #### Extract posterior
 
-```{r}
-consent_prop <- mean(data_ckd$consent)
 
-post <- as_draws_df(model_complex_lin)
-b_all <- post %>% select(starts_with("b_"))
+```{r}
+consent_prop <- mean(
+  data_ckd$consent
+)
+
+age_scale <- 25 / 30
+
+post <- posterior::as_draws_df(
+  model_complex_lin
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
 
 base <- b_all %>%
-  transmute(
+  dplyr::transmute(
     Intercept = b_Intercept,
-    IageM62D30 = b_IageM62D30,
+    age_25y = b_IageM62D30 * age_scale,
     sex_female = b_sex_female,
     transplant = b_transplant,
     FU_DM1 = b_FU_DM1,
@@ -1089,10 +1063,11 @@ base <- b_all %>%
   )
 
 eff_consent0 <- base
+
 eff_consent1 <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent`,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * age_scale,
     transplant = transplant + b_all$`b_consent:transplant`,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1`,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2`,
@@ -1104,9 +1079,9 @@ eff_consent1 <- base %>%
   )
 
 eff_consent_mean <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent * consent_prop,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent` * consent_prop,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * consent_prop * age_scale,
     transplant = transplant + b_all$`b_consent:transplant` * consent_prop,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1` * consent_prop,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2` * consent_prop,
@@ -1117,76 +1092,269 @@ eff_consent_mean <- base %>%
     sex_female = sex_female + b_all$`b_consent:sex_female` * consent_prop
   )
 
-summ <- bind_rows(
-  summarise_draws(
-    eff_consent0, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "unscreened"
-  ),
-  summarise_draws(
-    eff_consent1, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "screening"
-  ),
-  summarise_draws(
-    eff_consent_mean, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "enriched"
+calc_marg_log_or <- function(model, data, var_name, val1, val0) {
+  
+  d1 <- data
+  
+  d1[[var_name]] <- val1
+  
+  p1 <- brms::posterior_epred(
+    model,
+    newdata = d1
   )
-) %>%
-  rename(predictor = variable, CI_L = `2.5%`, CI_U = `97.5%`) %>%
-  mutate(
-    OR = exp(median),
-    CI_L = exp(CI_L),
-    CI_U = exp(CI_U)
+  
+  p1_marg <- rowMeans(
+    p1
+  )
+  
+  d0 <- data
+  
+  d0[[var_name]] <- val0
+  
+  p0 <- brms::posterior_epred(
+    model,
+    newdata = d0
+  )
+  
+  p0_marg <- rowMeans(
+    p0
+  )
+  
+  odds1 <- p1_marg / (1 - p1_marg)
+  
+  odds0 <- p0_marg / (1 - p0_marg)
+  
+  marg_or <- odds1 / odds0
+  
+  return(log(marg_or))
+}
+
+data_dm_ref <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
   )
 
-data_forest <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = factor(predictor, levels = rev(unique(predictor))),
-    predictor = recode(
-      predictor,
-      IageM62D30 = "age_30y"
+p0_dm <- brms::posterior_epred(
+  model_complex_lin,
+  newdata = data_dm_ref
+) %>%
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- brms::posterior_epred(
+  model_complex_lin,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- brms::posterior_epred(
+  model_complex_lin,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_complex_lin,
+    data_ckd,
+    "HF_or_AF",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  posterior::summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  posterior::summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  posterior::summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  posterior::summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
+    OR = exp(
+      median
+    ),
+    CI_L = exp(
+      CI_L
+    ),
+    CI_U = exp(
+      CI_U
     )
   )
 
+data_forest <- summ %>%
+  dplyr::filter(
+    predictor != "Intercept"
+  ) %>%
+  dplyr::mutate(
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    )
+  )
 
 tab_ready <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = recode(
-      predictor,
-      IageM62D30 = "age_30y"
-    ),
-    label = sprintf("%.2f [%.2f, %.2f]", OR, CI_L, CI_U)
+  dplyr::filter(
+    predictor != "Intercept"
   ) %>%
-  select(cohort, predictor, label)
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
 
 tab_wide <- tab_ready %>%
-  pivot_wider(
+  tidyr::pivot_wider(
     names_from = cohort,
     values_from = label
   ) %>%
-  arrange(predictor)
+  dplyr::arrange(
+    predictor
+  )
 
 kableExtra::kable(
   tab_wide, 
-  caption = 'Result of multivariable Bayesian logistic model, showing association between clinical factors and newly diagnosed chronic kidney disease cases'
+  caption = "Associations between clinical factors and confirmed CKD from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference; the marginal age OR compares 75 versus 50 years"
   )
-
 ```
 
-#### Visualisation
+
+
+#### Visualisation, screening + conditional enriched
 
 ```{r, fig.height=5, fig.width=6.5}
 
-data_forest %>% 
-  dplyr::filter(cohort != "unscreened") %>%
+data_forest %>%
+  dplyr::filter(
+    cohort != 'unscreened', 
+     cohort != 'enriched_marginal' 
+  ) |>
   dplyr::mutate(
-    predictor = recode(
+    predictor = dplyr::recode(
       predictor,
-      "age_30y" = "Age (per 30y)",
+      "age_25y" = "Age (per 25y)",
       "transplant" = "Non-renal transplantation",
       "FU_DM1" = "T1DM",
       "FU_DM2" = "T2DM",
@@ -1196,42 +1364,652 @@ data_forest %>%
       "FU_steatosis" = "Liver steatosis",
       "sex_female" = "Female"
     ),
-    predictor = factor(predictor, levels = rev(unique(predictor))),
-    cohort = factor(
-  cohort,
-  levels = c("screening", "enriched", "unscreened"),
-  labels = c("Screening cohort", "Enriched cohort", "No consent cohort")
-)
-  ) %>% 
-  ggplot(aes(x = OR, y = predictor, color = cohort)) +
-  geom_point(position = position_dodge(width = 0.6), size = 2) +
-  geom_errorbarh(aes(xmin = CI_L, xmax = CI_U),
-                 position = position_dodge(width = 0.6), height = 0.3) +
-  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
-  scale_x_log10(
-    breaks = c(1/4, 1/2, 1, 2, 4, 8),
-    labels = c("1/4", "1/2", "1", "2", "4", "8")
-  ) +
-  scale_color_manual(
-     values = c(
-        "No consent cohort" = "#1b9e77",
-        "Screening cohort" = "#d95f02",
-        "Enriched cohort" = "skyblue3"
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
       )
+    ),
+    cohort = factor(
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
   ) +
-  labs(
-    x = "Adjusted odds ratio (log2 scale) for confirmed CKD",
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(
+      width = 0.6
+    ),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(
+      width = 0.6
+    ),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(
+      1 / 4,
+      1 / 2,
+      1,
+      2,
+      4,
+      8
+    ),
+    labels = c(
+      "1/4",
+      "1/2",
+      "1",
+      "2",
+      "4",
+      "8"
+    )
+  ) +
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
+  ) +
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for confirmed CKD",
     y = NULL,
     color = NULL
   ) +
-  theme_minimal(base_size = 12) +
-  theme(
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 1
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
     legend.position = "top",
-    axis.text.y = element_text(size = 11),
-    legend.text = element_text(size = 12)
+    axis.text.y = ggplot2::element_text(
+      size = 11
+    ),
+    legend.text = ggplot2::element_text(
+      size = 10
+    )
   )
 
 ```
+
+#### Visualisation, full
+
+```{r, fig.height=5, fig.width=6.5}
+
+data_forest %>%
+  dplyr::mutate(
+    predictor = dplyr::recode(
+      predictor,
+      "age_25y" = "Age (per 25y)",
+      "transplant" = "Non-renal transplantation",
+      "FU_DM1" = "T1DM",
+      "FU_DM2" = "T2DM",
+      "FU_hypertension" = "Arterial hypertension",
+      "HF_or_AF" = "Heart failure or atrial fibrilation",
+      "FU_atherosclerosis" = "ASCVD",
+      "FU_steatosis" = "Liver steatosis",
+      "sex_female" = "Female"
+    ),
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    ),
+    cohort = factor(
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(
+      width = 0.6
+    ),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(
+      width = 0.6
+    ),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(
+      1 / 4,
+      1 / 2,
+      1,
+      2,
+      4,
+      8
+    ),
+    labels = c(
+      "1/4",
+      "1/2",
+      "1",
+      "2",
+      "4",
+      "8"
+    )
+  ) +
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
+  ) +
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for confirmed CKD",
+    y = NULL,
+    color = NULL
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 2
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
+    legend.position = "top",
+    axis.text.y = ggplot2::element_text(
+      size = 11
+    ),
+    legend.text = ggplot2::element_text(
+      size = 10
+    )
+  )
+
+```
+
+#### Sensitivity analysis model
+
+Fit
+
+```{r}
+
+priors_sens <- c(
+  prior(student_t(3, 0, 100), class = "Intercept"),
+
+  prior(normal(0, 5), class = "b", coef = "BMI_over30"),
+  prior(normal(0, 5), class = "b", coef = "transplant"),
+  prior(normal(0, 5), class = "b", coef = "sex_female"),
+  prior(normal(0, 5), class = "b", coef = "FU_DM1"),
+  prior(normal(0, 5), class = "b", coef = "FU_DM2"),
+  prior(normal(0, 5), class = "b", coef = "FU_atherosclerosis"),
+  prior(normal(0, 5), class = "b", coef = "FU_steatosis"),
+  prior(normal(0, 5), class = "b", coef = "FU_hypertension"),
+  prior(normal(0, 5), class = "b", coef = "HF_or_AF"),
+  prior(normal(0, 5), class = "b", coef = "consent1"),
+
+  prior(normal(0, 1), class = "b",
+        coef = "transplant:consent1"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:FU_DM1"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:FU_DM2"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:sex_female"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:FU_steatosis"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:FU_hypertension"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:FU_atherosclerosis"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:HF_or_AF"),
+  prior(normal(0, 1), class = "b",
+        coef = "consent1:BMI_over30")
+)
+
+model_sens_lin <- run(
+  expr = brm(
+    identified_CKD_by_lab ~ 
+      s(I( (age-62) / 30), by = consent, k = 5) +
+      transplant * consent +
+      FU_DM1 * consent +
+      FU_DM2 * consent +
+      sex_female * consent + 
+      FU_steatosis * consent +
+      FU_hypertension * consent +
+      FU_atherosclerosis * consent +
+      HF_or_AF * consent +
+      BMI_over30 * consent,
+    data = data_ckd |> 
+      dplyr::filter(!is.na(BMI_over30)) |>
+      dplyr::mutate(consent = factor(consent)),
+    family = bernoulli(link = "logit"),
+    backend = "cmdstanr",
+    seed = 736,
+    cores = 1, chains = 2,
+    prior = priors_sens,
+    iter = 7000, warmup = 2000,
+    control = list(adapt_delta = 0.95)
+  ),
+  path = "gitignore/run/model_sens_lin",
+  reuse = TRUE
+)
+
+prior_summary(model_sens_lin)
+summary(model_sens_lin, robust = TRUE)
+
+exp(fixef(model_sens_lin, robust = TRUE))[,c(1, 3, 4)]
+```
+
+Extract posterior and check results
+
+```{r}
+dummy_base <- data_ckd_complete[1, ] %>%
+  dplyr::mutate(
+    transplant = 0,
+    FU_DM1 = 0,
+    FU_DM2 = 0,
+    sex_female = 0,
+    FU_steatosis = 0,
+    FU_hypertension = 0,
+    FU_atherosclerosis = 0,
+    HF_or_AF = 0,
+    BMI_over30 = 0
+  )
+
+d_c0_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c0_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c0_a50 <- posterior_linpred(
+  model_sens_lin,
+  newdata = d_c0_a50
+)
+
+lin_c0_a75 <- posterior_linpred(
+  model_sens_lin,
+  newdata = d_c0_a75
+)
+
+age_25y_c0 <- as.numeric(lin_c0_a75 - lin_c0_a50)
+
+d_c1_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c1_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c1_a50 <- posterior_linpred(
+  model_sens_lin,
+  newdata = d_c1_a50
+)
+
+lin_c1_a75 <- posterior_linpred(
+  model_sens_lin,
+  newdata = d_c1_a75
+)
+
+age_25y_c1 <- as.numeric(lin_c1_a75 - lin_c1_a50)
+
+post <- as_draws_df(
+  model_sens_lin
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
+
+eff_consent0 <- dplyr::tibble(
+  age_25y = age_25y_c0,
+  sex_female = b_all$b_sex_female,
+  transplant = b_all$b_transplant,
+  FU_DM1 = b_all$b_FU_DM1,
+  FU_DM2 = b_all$b_FU_DM2,
+  FU_steatosis = b_all$b_FU_steatosis,
+  FU_hypertension = b_all$b_FU_hypertension,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis,
+  HF_or_AF = b_all$b_HF_or_AF,
+  BMI_over30 = b_all$b_BMI_over30
+)
+
+eff_consent1 <- dplyr::tibble(
+  age_25y = age_25y_c1,
+  sex_female = b_all$b_sex_female + b_all$`b_consent1:sex_female`,
+  transplant = b_all$b_transplant + b_all$`b_transplant:consent1`,
+  FU_DM1 = b_all$b_FU_DM1 + b_all$`b_consent1:FU_DM1`,
+  FU_DM2 = b_all$b_FU_DM2 + b_all$`b_consent1:FU_DM2`,
+  FU_steatosis = b_all$b_FU_steatosis + b_all$`b_consent1:FU_steatosis`,
+  FU_hypertension = b_all$b_FU_hypertension + b_all$`b_consent1:FU_hypertension`,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis + b_all$`b_consent1:FU_atherosclerosis`,
+  HF_or_AF = b_all$b_HF_or_AF + b_all$`b_consent1:HF_or_AF`,
+  BMI_over30 = b_all$b_BMI_over30 + b_all$`b_consent1:BMI_over30`
+)
+
+eff_consent_mean <- dplyr::tibble(
+  age_25y = age_25y_c0 * (1 - consent_prop) + 
+    age_25y_c1 * consent_prop,
+  sex_female = eff_consent0$sex_female * (1 - consent_prop) + 
+    eff_consent1$sex_female * consent_prop,
+  transplant = eff_consent0$transplant * (1 - consent_prop) + 
+    eff_consent1$transplant * consent_prop,
+  FU_DM1 = eff_consent0$FU_DM1 * (1 - consent_prop) + 
+    eff_consent1$FU_DM1 * consent_prop,
+  FU_DM2 = eff_consent0$FU_DM2 * (1 - consent_prop) + 
+    eff_consent1$FU_DM2 * consent_prop,
+  FU_steatosis = eff_consent0$FU_steatosis * (1 - consent_prop) + 
+    eff_consent1$FU_steatosis * consent_prop,
+  FU_hypertension = eff_consent0$FU_hypertension * (1 - consent_prop) + 
+    eff_consent1$FU_hypertension * consent_prop,
+  FU_atherosclerosis = eff_consent0$FU_atherosclerosis * (1 - consent_prop) + 
+    eff_consent1$FU_atherosclerosis * consent_prop,
+  HF_or_AF = eff_consent0$HF_or_AF * (1 - consent_prop) + 
+    eff_consent1$HF_or_AF * consent_prop,
+  BMI_over30 = eff_consent0$BMI_over30 * (1 - consent_prop) + 
+    eff_consent1$BMI_over30 * consent_prop
+)
+
+calc_marg_log_or <- function(model, data, var_name, val1, val0) {
+  d1 <- data
+  
+  d1[[var_name]] <- val1
+  
+  p1 <- posterior_epred(
+    model,
+    newdata = d1
+  )
+  
+  p1_marg <- rowMeans(p1)
+
+  d0 <- data
+  
+  d0[[var_name]] <- val0
+  
+  p0 <- posterior_epred(
+    model,
+    newdata = d0
+  )
+  
+  p0_marg <- rowMeans(p0)
+
+  odds1 <- p1_marg / (1 - p1_marg)
+  
+  odds0 <- p0_marg / (1 - p0_marg)
+
+  marg_or <- odds1 / odds0
+  
+  return(log(marg_or))
+}
+
+data_dm_ref <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
+  )
+
+p0_dm <- posterior_epred(
+  model_sens_lin,
+  newdata = data_dm_ref
+) %>%
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- posterior_epred(
+  model_sens_lin,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- posterior_epred(
+  model_sens_lin,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "HF_or_AF",
+    1,
+    0
+  ),
+  BMI_over30 = calc_marg_log_or(
+    model_sens_lin,
+    data_ckd_complete,
+    "BMI_over30",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
+    OR = exp(median),
+    CI_L = exp(CI_L),
+    CI_U = exp(CI_U)
+  )
+
+tab_ready <- summ %>%
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
+
+tab_wide <- tab_ready %>%
+  tidyr::pivot_wider(
+    names_from = cohort,
+    values_from = label
+  ) %>%
+  dplyr::arrange(
+    predictor
+  )
+
+kableExtra::kable(
+  tab_wide,
+  caption = "Associations between clinical factors and confirmed CKD from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference comparing 75 versus 50 years."
+)
+```
+
 
 ## Identified CKD - age-calibrated
 
@@ -1539,6 +2317,7 @@ kableExtra::kable(
 model_time_nl_AgeCal <- run(
   expr = brm(
     identified_CKD_by_lab_AgeSpecCut ~
+      consent +
       s(I( (age-62) / 30), by = consent, k = 5),
     family = bernoulli(link = "logit"),
     data = data_ckd %>% dplyr::mutate(consent = factor(consent)),
@@ -1840,13 +2619,21 @@ exp(fixef(model_complex_lin_AgeCal, robust = TRUE))[,c(1, 3, 4)]
 ```{r}
 consent_prop <- mean(data_ckd$consent)
 
-post <- as_draws_df(model_complex_lin_AgeCal)
-b_all <- post %>% select(starts_with("b_"))
+age_scale <- 25 / 30
+
+post <- posterior::as_draws_df(
+  model_complex_lin_AgeCal
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
 
 base <- b_all %>%
-  transmute(
+  dplyr::transmute(
     Intercept = b_Intercept,
-    IageM62D30 = b_IageM62D30,
+    age_25y = b_IageM62D30 * age_scale,
     sex_female = b_sex_female,
     transplant = b_transplant,
     FU_DM1 = b_FU_DM1,
@@ -1858,10 +2645,11 @@ base <- b_all %>%
   )
 
 eff_consent0 <- base
+
 eff_consent1 <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent`,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * age_scale,
     transplant = transplant + b_all$`b_consent:transplant`,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1`,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2`,
@@ -1873,9 +2661,9 @@ eff_consent1 <- base %>%
   )
 
 eff_consent_mean <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent * consent_prop,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent` * consent_prop,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * consent_prop * age_scale,
     transplant = transplant + b_all$`b_consent:transplant` * consent_prop,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1` * consent_prop,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2` * consent_prop,
@@ -1886,118 +2674,783 @@ eff_consent_mean <- base %>%
     sex_female = sex_female + b_all$`b_consent:sex_female` * consent_prop
   )
 
-summ <- bind_rows(
-  summarise_draws(
-    eff_consent0, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "unscreened"
-  ),
-  summarise_draws(
-    eff_consent1, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "screening"
-  ),
-  summarise_draws(
-    eff_consent_mean, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "enriched"
+data_dm_ref <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
   )
+
+p0_dm <- brms::posterior_epred(
+  model_complex_lin_AgeCal,
+  newdata = data_dm_ref
 ) %>%
-  rename(predictor = variable, CI_L = `2.5%`, CI_U = `97.5%`) %>%
-  mutate(
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- brms::posterior_epred(
+  model_complex_lin_AgeCal,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- brms::posterior_epred(
+  model_complex_lin_AgeCal,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_complex_lin_AgeCal,
+    data_ckd,
+    "HF_or_AF",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  posterior::summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  posterior::summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  posterior::summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  posterior::summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
     OR = exp(median),
     CI_L = exp(CI_L),
     CI_U = exp(CI_U)
   )
 
 data_forest <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = factor(predictor, levels = rev(unique(predictor))),
-    predictor = recode(
+  dplyr::filter(
+    predictor != "Intercept"
+  ) %>%
+  dplyr::mutate(
+    predictor = factor(
       predictor,
-      IageM62D30 = "age_30y"
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
     )
   )
 
-
 tab_ready <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = recode(
-      predictor,
-      IageM62D30 = "age_30y"
-    ),
-    label = sprintf("%.2f [%.2f, %.2f]", OR, CI_L, CI_U)
+  dplyr::filter(
+    predictor != "Intercept"
   ) %>%
-  select(cohort, predictor, label)
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
 
 tab_wide <- tab_ready %>%
-  pivot_wider(
+  tidyr::pivot_wider(
     names_from = cohort,
     values_from = label
   ) %>%
-  arrange(predictor)
+  dplyr::arrange(
+    predictor
+  )
 
-kableExtra::kable(tab_wide)
+kableExtra::kable(tab_wide, caption = "Associations between clinical factors and age-calibrated CKD from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference; the marginal age OR compares 75 versus 50 years.")
 
 ```
 
-#### Visualisation
+#### Visualisation, screening + enriched (conditional)
 
 ```{r, fig.height=5, fig.width=6.5}
-
-data_forest %>% 
-  dplyr::filter(cohort != "unscreened") %>%
+data_forest %>%
+  dplyr::filter(
+    cohort != "unscreened",
+    cohort != "enriched_marginal"
+  ) %>%
   dplyr::mutate(
-    predictor = recode(
+    predictor = dplyr::recode(
       predictor,
-      "age_30y" = "Age (per 30y)",
+      "age_25y" = "Age (per 25y)",
       "transplant" = "Non-renal transplantation",
       "FU_DM1" = "T1DM",
       "FU_DM2" = "T2DM",
       "FU_hypertension" = "Arterial hypertension",
-      "HF_or_AF" = "Heart failure or atrial fibrilation",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
       "FU_atherosclerosis" = "ASCVD",
       "FU_steatosis" = "Liver steatosis",
-      "sex_female" = 'Female'
+      "sex_female" = "Female"
     ),
-    predictor = factor(predictor, levels = rev(unique(predictor))),
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    ),
     cohort = factor(
-  cohort,
-  levels = c("screening", "enriched", "unscreened"),
-  labels = c("Screening cohort", "Enriched cohort", "No consent cohort")
-)
-  ) %>% 
-  ggplot(aes(x = OR, y = predictor, color = cohort)) +
-  geom_point(position = position_dodge(width = 0.6), size = 2) +
-  geom_errorbarh(aes(xmin = CI_L, xmax = CI_U),
-                 position = position_dodge(width = 0.6), height = 0.3) +
-  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
-  scale_x_log10(
-    breaks = c(1/4, 1/2, 1, 2, 4, 8),
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.6),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(width = 0.6),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
     labels = c("1/4", "1/2", "1", "2", "4", "8")
   ) +
-  scale_color_manual(
-     values = c(
-        "No consent cohort" = "#1b9e77",
-        "Screening cohort" = "#d95f02",
-        "Enriched cohort" = "skyblue3"
-      )
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
   ) +
-  labs(
-    x = "Adjusted odds ratio (log2 scale) for age-calibrated CKD",
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for age-calibrated CKD",
     y = NULL,
     color = NULL
   ) +
-  theme_minimal(base_size = 12) +
-  theme(
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 1
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
     legend.position = "top",
-    axis.text.y = element_text(size = 11),
-    legend.text = element_text(size = 12)
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
+  )
+```
+
+
+
+#### Visualisation, all
+
+```{r, fig.height=5, fig.width=6.5}
+data_forest %>%
+  dplyr::mutate(
+    predictor = dplyr::recode(
+      predictor,
+      "age_25y" = "Age (per 25y)",
+      "transplant" = "Non-renal transplantation",
+      "FU_DM1" = "T1DM",
+      "FU_DM2" = "T2DM",
+      "FU_hypertension" = "Arterial hypertension",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
+      "FU_atherosclerosis" = "ASCVD",
+      "FU_steatosis" = "Liver steatosis",
+      "sex_female" = "Female"
+    ),
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    ),
+    cohort = factor(
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.6),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(width = 0.6),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
+    labels = c("1/4", "1/2", "1", "2", "4", "8")
+  ) +
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
+  ) +
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for age-calibrated CKD",
+    y = NULL,
+    color = NULL
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 1
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
+    legend.position = "top",
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
+  )
+```
+
+#### Sensitivity analysis
+
+Fit model
+
+```{r}
+model_sens_lin_AgeCal <- run(
+  expr = brm(
+    identified_CKD_by_lab_AgeSpecCut ~ 
+      s(I( (age-62) / 30), by = consent, k = 5) +
+      transplant * consent +
+      FU_DM1 * consent +
+      FU_DM2 * consent +
+      sex_female * consent + 
+      FU_steatosis * consent +
+      FU_hypertension * consent +
+      FU_atherosclerosis * consent +
+      HF_or_AF * consent +
+      BMI_over30 * consent,
+    data = data_ckd |> 
+      dplyr::filter(!is.na(BMI_over30)) |>
+      dplyr::mutate(consent = factor(consent)),
+    family = bernoulli(link = "logit"),
+    backend = "cmdstanr",
+    seed = 736,
+    cores = 1, chains = 2,
+    prior = priors_sens,
+    iter = 7000, warmup = 2000,
+    control = list(adapt_delta = 0.95)
+  ),
+  path = "gitignore/run/model_sens_lin_AgeCal",
+  reuse = TRUE
+)
+
+prior_summary(model_sens_lin_AgeCal)
+summary(model_sens_lin_AgeCal, robust = TRUE)
+
+exp(fixef(model_sens_lin_AgeCal, robust = TRUE))[,c(1, 3, 4)]
+```
+
+Extract posteriors and show results
+
+```{r}
+dummy_base <- data_ckd_complete[1, ] %>%
+  dplyr::mutate(
+    transplant = 0,
+    FU_DM1 = 0,
+    FU_DM2 = 0,
+    sex_female = 0,
+    FU_steatosis = 0,
+    FU_hypertension = 0,
+    FU_atherosclerosis = 0,
+    HF_or_AF = 0,
+    BMI_over30 = 0
   )
 
+d_c0_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c0_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c0_a50 <- posterior_linpred(
+  model_sens_lin_AgeCal,
+  newdata = d_c0_a50
+)
+
+lin_c0_a75 <- posterior_linpred(
+  model_sens_lin_AgeCal,
+  newdata = d_c0_a75
+)
+
+age_25y_c0 <- as.numeric(lin_c0_a75 - lin_c0_a50)
+
+d_c1_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c1_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c1_a50 <- posterior_linpred(
+  model_sens_lin_AgeCal,
+  newdata = d_c1_a50
+)
+
+lin_c1_a75 <- posterior_linpred(
+  model_sens_lin_AgeCal,
+  newdata = d_c1_a75
+)
+
+age_25y_c1 <- as.numeric(lin_c1_a75 - lin_c1_a50)
+
+post <- as_draws_df(
+  model_sens_lin_AgeCal
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
+
+eff_consent0 <- dplyr::tibble(
+  age_25y = age_25y_c0,
+  sex_female = b_all$b_sex_female,
+  transplant = b_all$b_transplant,
+  FU_DM1 = b_all$b_FU_DM1,
+  FU_DM2 = b_all$b_FU_DM2,
+  FU_steatosis = b_all$b_FU_steatosis,
+  FU_hypertension = b_all$b_FU_hypertension,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis,
+  HF_or_AF = b_all$b_HF_or_AF,
+  BMI_over30 = b_all$b_BMI_over30
+)
+
+eff_consent1 <- dplyr::tibble(
+  age_25y = age_25y_c1,
+  sex_female = b_all$b_sex_female + b_all$`b_consent1:sex_female`,
+  transplant = b_all$b_transplant + b_all$`b_transplant:consent1`,
+  FU_DM1 = b_all$b_FU_DM1 + b_all$`b_consent1:FU_DM1`,
+  FU_DM2 = b_all$b_FU_DM2 + b_all$`b_consent1:FU_DM2`,
+  FU_steatosis = b_all$b_FU_steatosis + b_all$`b_consent1:FU_steatosis`,
+  FU_hypertension = b_all$b_FU_hypertension + b_all$`b_consent1:FU_hypertension`,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis + b_all$`b_consent1:FU_atherosclerosis`,
+  HF_or_AF = b_all$b_HF_or_AF + b_all$`b_consent1:HF_or_AF`,
+  BMI_over30 = b_all$b_BMI_over30 + b_all$`b_consent1:BMI_over30`
+)
+
+eff_consent_mean <- dplyr::tibble(
+  age_25y = age_25y_c0 * (1 - consent_prop) + 
+    age_25y_c1 * consent_prop,
+  sex_female = eff_consent0$sex_female * (1 - consent_prop) + 
+    eff_consent1$sex_female * consent_prop,
+  transplant = eff_consent0$transplant * (1 - consent_prop) + 
+    eff_consent1$transplant * consent_prop,
+  FU_DM1 = eff_consent0$FU_DM1 * (1 - consent_prop) + 
+    eff_consent1$FU_DM1 * consent_prop,
+  FU_DM2 = eff_consent0$FU_DM2 * (1 - consent_prop) + 
+    eff_consent1$FU_DM2 * consent_prop,
+  FU_steatosis = eff_consent0$FU_steatosis * (1 - consent_prop) + 
+    eff_consent1$FU_steatosis * consent_prop,
+  FU_hypertension = eff_consent0$FU_hypertension * (1 - consent_prop) + 
+    eff_consent1$FU_hypertension * consent_prop,
+  FU_atherosclerosis = eff_consent0$FU_atherosclerosis * (1 - consent_prop) + 
+    eff_consent1$FU_atherosclerosis * consent_prop,
+  HF_or_AF = eff_consent0$HF_or_AF * (1 - consent_prop) + 
+    eff_consent1$HF_or_AF * consent_prop,
+  BMI_over30 = eff_consent0$BMI_over30 * (1 - consent_prop) + 
+    eff_consent1$BMI_over30 * consent_prop
+)
+
+calc_marg_log_or <- function(model, data, var_name, val1, val0) {
+  d1 <- data
+  
+  d1[[var_name]] <- val1
+  
+  p1 <- posterior_epred(
+    model,
+    newdata = d1
+  )
+  
+  p1_marg <- rowMeans(p1)
+
+  d0 <- data
+  
+  d0[[var_name]] <- val0
+  
+  p0 <- posterior_epred(
+    model,
+    newdata = d0
+  )
+  
+  p0_marg <- rowMeans(p0)
+
+  odds1 <- p1_marg / (1 - p1_marg)
+  
+  odds0 <- p0_marg / (1 - p0_marg)
+
+  marg_or <- odds1 / odds0
+  
+  return(log(marg_or))
+}
+
+data_dm_ref <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
+  )
+
+p0_dm <- posterior_epred(
+  model_sens_lin_AgeCal,
+  newdata = data_dm_ref
+) %>%
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- posterior_epred(
+  model_sens_lin_AgeCal,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- posterior_epred(
+  model_sens_lin_AgeCal,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "HF_or_AF",
+    1,
+    0
+  ),
+  BMI_over30 = calc_marg_log_or(
+    model_sens_lin_AgeCal,
+    data_ckd_complete,
+    "BMI_over30",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
+    OR = exp(median),
+    CI_L = exp(CI_L),
+    CI_U = exp(CI_U)
+  )
+
+tab_ready <- summ %>%
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
+
+tab_wide <- tab_ready %>%
+  tidyr::pivot_wider(
+    names_from = cohort,
+    values_from = label
+  ) %>%
+  dplyr::arrange(
+    predictor
+  )
+
+kableExtra::kable(
+  tab_wide,
+  caption = "Associations between clinical factors and confirmed CKD (defined by an age-specific eGFR threshold) from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference comparing 75 versus 50 years."
+)
 ```
+
 
 ## New CKD cases
 
@@ -2306,6 +3759,7 @@ kableExtra::kable(
 model_time_nl_NewCases <- run(
   expr = brm(
     new_cases ~
+      consent +
       s(I( (age-62) / 30), by = consent, k = 5),
     family = bernoulli(link = "logit"),
     data = data_ckd %>% dplyr::mutate(consent = factor(consent)),
@@ -2495,13 +3949,21 @@ exp(fixef(model_complex_lin_NewCases, robust = TRUE))[,c(1, 3, 4)]
 ```{r}
 consent_prop <- mean(data_ckd$consent)
 
-post <- as_draws_df(model_complex_lin_NewCases)
-b_all <- post %>% select(starts_with("b_"))
+age_scale <- 25 / 30
+
+post <- posterior::as_draws_df(
+  model_complex_lin_NewCases
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
 
 base <- b_all %>%
-  transmute(
+  dplyr::transmute(
     Intercept = b_Intercept,
-    IageM62D30 = b_IageM62D30,
+    age_25y = b_IageM62D30 * age_scale,
     sex_female = b_sex_female,
     transplant = b_transplant,
     FU_DM1 = b_FU_DM1,
@@ -2513,10 +3975,11 @@ base <- b_all %>%
   )
 
 eff_consent0 <- base
+
 eff_consent1 <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent`,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * age_scale,
     transplant = transplant + b_all$`b_consent:transplant`,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1`,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2`,
@@ -2528,9 +3991,9 @@ eff_consent1 <- base %>%
   )
 
 eff_consent_mean <- base %>%
-  mutate(
+  dplyr::mutate(
     Intercept = Intercept + b_all$b_consent * consent_prop,
-    IageM62D30 = IageM62D30 + b_all$`b_IageM62D30:consent` * consent_prop,
+    age_25y = age_25y + b_all$`b_IageM62D30:consent` * consent_prop * age_scale,
     transplant = transplant + b_all$`b_consent:transplant` * consent_prop,
     FU_DM1 = FU_DM1 + b_all$`b_consent:FU_DM1` * consent_prop,
     FU_DM2 = FU_DM2 + b_all$`b_consent:FU_DM2` * consent_prop,
@@ -2541,121 +4004,788 @@ eff_consent_mean <- base %>%
     sex_female = sex_female + b_all$`b_consent:sex_female` * consent_prop
   )
 
-summ <- bind_rows(
-  summarise_draws(
-    eff_consent0, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "unscreened"
-  ),
-  summarise_draws(
-    eff_consent1, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "screening"
-  ),
-  summarise_draws(
-    eff_consent_mean, median, ~ quantile(.x, c(0.025, 0.975))
-  ) %>% mutate(
-    cohort = "enriched"
+
+data_dm_ref <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
   )
+
+p0_dm <- brms::posterior_epred(
+  model_complex_lin_NewCases,
+  newdata = data_dm_ref
 ) %>%
-  rename(predictor = variable, CI_L = `2.5%`, CI_U = `97.5%`) %>%
-  mutate(
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- brms::posterior_epred(
+  model_complex_lin_NewCases,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- brms::posterior_epred(
+  model_complex_lin_NewCases,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_complex_lin_NewCases,
+    data_ckd,
+    "HF_or_AF",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  posterior::summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  posterior::summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  posterior::summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  posterior::summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(.x, c(0.025, 0.975))
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
     OR = exp(median),
     CI_L = exp(CI_L),
     CI_U = exp(CI_U)
   )
 
 data_forest <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = factor(predictor, levels = rev(unique(predictor))),
-    predictor = recode(
+  dplyr::filter(
+    predictor != "Intercept"
+  ) %>%
+  dplyr::mutate(
+    predictor = factor(
       predictor,
-      IageM62D30 = "age_30y"
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
     )
   )
 
-
 tab_ready <- summ %>%
-  filter(predictor != "Intercept") %>%
-  mutate(
-    predictor = recode(
-      predictor,
-      IageM62D30 = "age_30y"
-    ),
-    label = sprintf("%.2f [%.2f, %.2f]", OR, CI_L, CI_U)
+  dplyr::filter(
+    predictor != "Intercept"
   ) %>%
-  select(cohort, predictor, label)
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
 
 tab_wide <- tab_ready %>%
-  pivot_wider(
+  tidyr::pivot_wider(
     names_from = cohort,
     values_from = label
   ) %>%
-  arrange(predictor)
+  dplyr::arrange(
+    predictor
+  )
 
-kableExtra::kable(tab_wide)
+kableExtra::kable(tab_wide, caption = "Associations between clinical factors and newly diagnosed CKD from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference; the marginal age OR compares 75 versus 50 years.")
 
 ```
 
-#### Visualisation
+#### Visualisation, screening + enriched conditional
 
 ```{r, fig.height=5, fig.width=6.5}
 
-data_forest %>% 
-  dplyr::filter(cohort != "unscreened") %>%
+data_forest %>%
+  dplyr::filter(
+    cohort != "unscreened",
+    cohort != "enriched_marginal"
+  ) %>%
   dplyr::mutate(
-    predictor = recode(
+    predictor = dplyr::recode(
       predictor,
-      "age_30y" = "Age (per 30y)",
+      "age_25y" = "Age (per 25y)",
       "transplant" = "Non-renal transplantation",
       "FU_DM1" = "T1DM",
       "FU_DM2" = "T2DM",
       "FU_hypertension" = "Arterial hypertension",
-      "HF_or_AF" = "Heart failure or atrial fibrilation",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
       "FU_atherosclerosis" = "ASCVD",
       "FU_steatosis" = "Liver steatosis",
-      'sex_female' = 'Female'
+      "sex_female" = "Female"
     ),
-    predictor = factor(predictor, levels = rev(unique(predictor))),
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    ),
     cohort = factor(
-  cohort,
-  levels = c("screening", "enriched", "unscreened"),
-  labels = c("Screening cohort", "Enriched cohort", "No consent cohort")
-)
-  ) %>% 
-  dplyr::filter(cohort != 'enriched') %>% 
-  ggplot(aes(x = OR, y = predictor, color = cohort)) +
-  geom_point(position = position_dodge(width = 0.6), size = 2) +
-  geom_errorbarh(aes(xmin = CI_L, xmax = CI_U),
-                 position = position_dodge(width = 0.6), height = 0.3) +
-  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
-  scale_x_log10(
-    breaks = c(1/4, 1/2, 1, 2, 4, 8),
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.6),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(width = 0.6),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
     labels = c("1/4", "1/2", "1", "2", "4", "8")
   ) +
-  scale_color_manual(
-     values = c(
-        "No consent cohort" = "#1b9e77",
-        "Screening cohort" = "#d95f02",
-        "Enriched cohort" = "skyblue3"
-      )
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
   ) +
-  labs(
-    x = "Adjusted odds ratio (log2 scale) for new CKD cases",
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for newly diagnosed CKD",
     y = NULL,
     color = NULL
   ) +
-  theme_minimal(base_size = 12) +
-  theme(
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 1
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
     legend.position = "top",
-    axis.text.y = element_text(size = 11),
-    legend.text = element_text(size = 12)
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
   )
 
 ```
 
-# Does treatment save years from dialysis?
+#### Visualisation, all
+
+```{r, fig.height=5, fig.width=6.5}
+
+data_forest %>%
+  dplyr::mutate(
+    predictor = dplyr::recode(
+      predictor,
+      "age_25y" = "Age (per 25y)",
+      "transplant" = "Non-renal transplantation",
+      "FU_DM1" = "T1DM",
+      "FU_DM2" = "T2DM",
+      "FU_hypertension" = "Arterial hypertension",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
+      "FU_atherosclerosis" = "ASCVD",
+      "FU_steatosis" = "Liver steatosis",
+      "sex_female" = "Female"
+    ),
+    predictor = factor(
+      predictor,
+      levels = rev(
+        unique(
+          predictor
+        )
+      )
+    ),
+    cohort = factor(
+      cohort,
+      levels = c(
+        "unscreened",
+        "screening",
+        "enriched_std_cond",
+        "enriched_marginal"
+      ),
+      labels = c(
+        "Unscreened patients",
+        "Screening cohort",
+        "Enriched cohort (conditional)",
+        "Enriched cohort (marginal)"
+      )
+    )
+  ) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = OR,
+      y = predictor,
+      color = cohort
+    )
+  ) +
+  ggplot2::geom_point(
+    position = ggplot2::position_dodge(width = 0.6),
+    size = 2
+  ) +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(
+      xmin = CI_L,
+      xmax = CI_U
+    ),
+    position = ggplot2::position_dodge(width = 0.6),
+    height = 0.3
+  ) +
+  ggplot2::geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "gray40"
+  ) +
+  ggplot2::scale_x_log10(
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
+    labels = c("1/4", "1/2", "1", "2", "4", "8")
+  ) +
+  ggplot2::scale_color_manual(
+    values = c(
+      "Unscreened patients" = "#1b9e77",
+      "Screening cohort" = "#d95f02",
+      "Enriched cohort (conditional)" = "skyblue3",
+      "Enriched cohort (marginal)" = "#984ea3"
+    )
+  ) +
+  ggplot2::labs(
+    x = "Adjusted odds ratio (log scale) for newly diagnosed CKD",
+    y = NULL,
+    color = NULL
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      nrow = 1
+    )
+  ) +
+  ggplot2::theme_minimal(
+    base_size = 12
+  ) +
+  ggplot2::theme(
+    legend.position = "top",
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
+  )
+
+```
+
+#### Sensitivity analysis
+
+Fit model
+
+```{r}
+model_sens_lin_NewCases <- run(
+  expr = brm(
+    new_cases ~ 
+      s(I( (age-62) / 30), by = consent, k = 5) +
+      transplant * consent +
+      FU_DM1 * consent +
+      FU_DM2 * consent +
+      sex_female * consent + 
+      FU_steatosis * consent +
+      FU_hypertension * consent +
+      FU_atherosclerosis * consent +
+      HF_or_AF * consent +
+      BMI_over30 * consent,
+    data = data_ckd |> 
+      dplyr::filter(!is.na(BMI_over30)) |>
+      dplyr::mutate(consent = factor(consent)),
+    family = bernoulli(link = "logit"),
+    backend = "cmdstanr",
+    seed = 736,
+    cores = 1, chains = 2,
+    prior = priors_sens,
+    iter = 7000, warmup = 2000,
+    control = list(adapt_delta = 0.95)
+  ),
+  path = "gitignore/run/model_sens_lin_NewCases",
+  reuse = TRUE
+)
+
+prior_summary(model_sens_lin_NewCases )
+summary(model_sens_lin_NewCases , robust = TRUE)
+
+exp(fixef(model_sens_lin_NewCases , robust = TRUE))[,c(1, 3, 4)]
+```
+
+Extract posteriors and show results
+
+```{r}
+dummy_base <- data_ckd_complete[1, ] %>%
+  dplyr::mutate(
+    transplant = 0,
+    FU_DM1 = 0,
+    FU_DM2 = 0,
+    sex_female = 0,
+    FU_steatosis = 0,
+    FU_hypertension = 0,
+    FU_atherosclerosis = 0,
+    HF_or_AF = 0,
+    BMI_over30 = 0
+  )
+
+d_c0_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c0_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(0, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c0_a50 <- posterior_linpred(
+  model_sens_lin_NewCases,
+  newdata = d_c0_a50
+)
+
+lin_c0_a75 <- posterior_linpred(
+  model_sens_lin_NewCases,
+  newdata = d_c0_a75
+)
+
+age_25y_c0 <- as.numeric(lin_c0_a75 - lin_c0_a50)
+
+d_c1_a50 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 50
+  )
+
+d_c1_a75 <- dummy_base %>%
+  dplyr::mutate(
+    consent = factor(1, levels = c("0", "1")),
+    age = 75
+  )
+
+lin_c1_a50 <- posterior_linpred(
+  model_sens_lin_NewCases,
+  newdata = d_c1_a50
+)
+
+lin_c1_a75 <- posterior_linpred(
+  model_sens_lin_NewCases,
+  newdata = d_c1_a75
+)
+
+age_25y_c1 <- as.numeric(lin_c1_a75 - lin_c1_a50)
+
+post <- as_draws_df(
+  model_sens_lin_NewCases
+)
+
+b_all <- post %>%
+  dplyr::select(
+    dplyr::starts_with("b_")
+  )
+
+eff_consent0 <- dplyr::tibble(
+  age_25y = age_25y_c0,
+  sex_female = b_all$b_sex_female,
+  transplant = b_all$b_transplant,
+  FU_DM1 = b_all$b_FU_DM1,
+  FU_DM2 = b_all$b_FU_DM2,
+  FU_steatosis = b_all$b_FU_steatosis,
+  FU_hypertension = b_all$b_FU_hypertension,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis,
+  HF_or_AF = b_all$b_HF_or_AF,
+  BMI_over30 = b_all$b_BMI_over30
+)
+
+eff_consent1 <- dplyr::tibble(
+  age_25y = age_25y_c1,
+  sex_female = b_all$b_sex_female + b_all$`b_consent1:sex_female`,
+  transplant = b_all$b_transplant + b_all$`b_transplant:consent1`,
+  FU_DM1 = b_all$b_FU_DM1 + b_all$`b_consent1:FU_DM1`,
+  FU_DM2 = b_all$b_FU_DM2 + b_all$`b_consent1:FU_DM2`,
+  FU_steatosis = b_all$b_FU_steatosis + b_all$`b_consent1:FU_steatosis`,
+  FU_hypertension = b_all$b_FU_hypertension + b_all$`b_consent1:FU_hypertension`,
+  FU_atherosclerosis = b_all$b_FU_atherosclerosis + b_all$`b_consent1:FU_atherosclerosis`,
+  HF_or_AF = b_all$b_HF_or_AF + b_all$`b_consent1:HF_or_AF`,
+  BMI_over30 = b_all$b_BMI_over30 + b_all$`b_consent1:BMI_over30`
+)
+
+eff_consent_mean <- dplyr::tibble(
+  age_25y = age_25y_c0 * (1 - consent_prop) + 
+    age_25y_c1 * consent_prop,
+  sex_female = eff_consent0$sex_female * (1 - consent_prop) + 
+    eff_consent1$sex_female * consent_prop,
+  transplant = eff_consent0$transplant * (1 - consent_prop) + 
+    eff_consent1$transplant * consent_prop,
+  FU_DM1 = eff_consent0$FU_DM1 * (1 - consent_prop) + 
+    eff_consent1$FU_DM1 * consent_prop,
+  FU_DM2 = eff_consent0$FU_DM2 * (1 - consent_prop) + 
+    eff_consent1$FU_DM2 * consent_prop,
+  FU_steatosis = eff_consent0$FU_steatosis * (1 - consent_prop) + 
+    eff_consent1$FU_steatosis * consent_prop,
+  FU_hypertension = eff_consent0$FU_hypertension * (1 - consent_prop) + 
+    eff_consent1$FU_hypertension * consent_prop,
+  FU_atherosclerosis = eff_consent0$FU_atherosclerosis * (1 - consent_prop) + 
+    eff_consent1$FU_atherosclerosis * consent_prop,
+  HF_or_AF = eff_consent0$HF_or_AF * (1 - consent_prop) + 
+    eff_consent1$HF_or_AF * consent_prop,
+  BMI_over30 = eff_consent0$BMI_over30 * (1 - consent_prop) + 
+    eff_consent1$BMI_over30 * consent_prop
+)
+
+calc_marg_log_or <- function(model, data, var_name, val1, val0) {
+  d1 <- data
+  
+  d1[[var_name]] <- val1
+  
+  p1 <- posterior_epred(
+    model,
+    newdata = d1
+  )
+  
+  p1_marg <- rowMeans(p1)
+
+  d0 <- data
+  
+  d0[[var_name]] <- val0
+  
+  p0 <- posterior_epred(
+    model,
+    newdata = d0
+  )
+  
+  p0_marg <- rowMeans(p0)
+
+  odds1 <- p1_marg / (1 - p1_marg)
+  
+  odds0 <- p0_marg / (1 - p0_marg)
+
+  marg_or <- odds1 / odds0
+  
+  return(log(marg_or))
+}
+
+data_dm_ref <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 0
+  )
+
+p0_dm <- posterior_epred(
+  model_sens_lin_NewCases,
+  newdata = data_dm_ref
+) %>%
+  rowMeans()
+
+odds0_dm <- p0_dm / (1 - p0_dm)
+
+data_dm1 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 1,
+    FU_DM2 = 0
+  )
+
+p1_dm1 <- posterior_epred(
+  model_sens_lin_NewCases,
+  newdata = data_dm1
+) %>%
+  rowMeans()
+
+odds1_dm1 <- p1_dm1 / (1 - p1_dm1)
+
+data_dm2 <- data_ckd_complete %>%
+  dplyr::mutate(
+    FU_DM1 = 0,
+    FU_DM2 = 1
+  )
+
+p1_dm2 <- posterior_epred(
+  model_sens_lin_NewCases,
+  newdata = data_dm2
+) %>%
+  rowMeans()
+
+odds1_dm2 <- p1_dm2 / (1 - p1_dm2)
+
+log_or_dm1_marg <- log(odds1_dm1 / odds0_dm)
+
+log_or_dm2_marg <- log(odds1_dm2 / odds0_dm)
+
+eff_marginal <- dplyr::tibble(
+  age_25y = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "age",
+    75,
+    50
+  ),
+  sex_female = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "sex_female",
+    1,
+    0
+  ),
+  transplant = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "transplant",
+    1,
+    0
+  ),
+  FU_DM1 = log_or_dm1_marg,
+  FU_DM2 = log_or_dm2_marg,
+  FU_steatosis = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "FU_steatosis",
+    1,
+    0
+  ),
+  FU_hypertension = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "FU_hypertension",
+    1,
+    0
+  ),
+  FU_atherosclerosis = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "FU_atherosclerosis",
+    1,
+    0
+  ),
+  HF_or_AF = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "HF_or_AF",
+    1,
+    0
+  ),
+  BMI_over30 = calc_marg_log_or(
+    model_sens_lin_NewCases,
+    data_ckd_complete,
+    "BMI_over30",
+    1,
+    0
+  )
+)
+
+summ <- dplyr::bind_rows(
+  summarise_draws(
+    eff_consent0,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "unscreened"
+    ),
+  summarise_draws(
+    eff_consent1,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "screening"
+    ),
+  summarise_draws(
+    eff_consent_mean,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_std_cond"
+    ),
+  summarise_draws(
+    eff_marginal,
+    median,
+    ~ quantile(
+      .x,
+      c(0.025, 0.975)
+    )
+  ) %>%
+    dplyr::mutate(
+      cohort = "enriched_marginal"
+    )
+) %>%
+  dplyr::rename(
+    predictor = variable,
+    CI_L = `2.5%`,
+    CI_U = `97.5%`
+  ) %>%
+  dplyr::mutate(
+    OR = exp(median),
+    CI_L = exp(CI_L),
+    CI_U = exp(CI_U)
+  )
+
+tab_ready <- summ %>%
+  dplyr::mutate(
+    label = sprintf(
+      "%.2f [%.2f, %.2f]",
+      OR,
+      CI_L,
+      CI_U
+    )
+  ) %>%
+  dplyr::select(
+    cohort,
+    predictor,
+    label
+  )
+
+tab_wide <- tab_ready %>%
+  tidyr::pivot_wider(
+    names_from = cohort,
+    values_from = label
+  ) %>%
+  dplyr::arrange(
+    predictor
+  )
+
+kableExtra::kable(
+  tab_wide,
+  caption = "Associations between clinical factors and newly diagnosed CKD cases from the multivariable Bayesian logistic regression model. Odds ratios (ORs) are shown with 95% credible intervals. For screened and unscreened patients, ORs are conditional estimates from the interaction model. For the Enriched cohort, two summary measures are presented: the population-average conditional OR, calculated as the weighted average of screened- and unscreened-specific log-ORs using their observed proportions in the cohort, and the marginal OR, obtained by posterior standardisation of predicted probabilities across all patients in the Enriched cohort. Age effects are expressed for a 25-year difference comparing 75 versus 50 years."
+)
+```
+
+
+# Model-projected gain in dialysis-free time
 
 ## Propotion of patients taking given drugs from those egligable
 
@@ -2768,121 +4898,6 @@ GLP1_add <- egfr_slope_GLP1 - egfr_slope_plcb
 sglt2_add
 finerenone_add
 GLP1_add
-```
-
-## individual eGFR slopes and individual years on dialysis saved
-
-```{r}
-smallest_possible_egfr <- -0.5
-
-data_ckd <- data_ckd %>%
-  dplyr::mutate(
-    eGFR_min_to10 = if_else(eGFR_min > 10, eGFR_min - 10, 0)
-  ) %>%
-  dplyr::mutate(
-    egfr_slope = pmin(
-      smallest_possible_egfr,
-      egfr_slope_plcb +
-        sglt2_add * FU_SGLT2 +
-        finerenone_add * FU_finerenone +
-        GLP1_add * FU_GLP1
-    ),
-    egfr_slope_potential =
-      pmin(
-        smallest_possible_egfr,
-        egfr_slope_plcb +
-          sglt2_add * pmax(FU_SGLT2, elig_SGLT2i_total) +
-          finerenone_add * pmax(FU_finerenone, elig_finerenone) +
-          GLP1_add * pmax(FU_GLP1, elig_GLP1_RA)
-      ),
-    egfr_slope_pot_SGLT =
-      pmin(
-        smallest_possible_egfr,
-        egfr_slope_plcb +
-          sglt2_add * pmax(FU_SGLT2, elig_SGLT2i_total) +
-          finerenone_add * FU_finerenone +
-          GLP1_add * FU_GLP1
-      ),
-    egfr_slope_pot_GLP =
-      pmin(
-        smallest_possible_egfr,
-        egfr_slope_plcb +
-          sglt2_add * FU_SGLT2 +
-          finerenone_add * FU_finerenone +
-          GLP1_add * pmax(FU_GLP1, elig_GLP1_RA)
-      ),
-    egfr_slope_pot_finerenone =
-      pmin(
-        smallest_possible_egfr,
-        egfr_slope_plcb +
-          sglt2_add * FU_SGLT2 +
-          finerenone_add * pmax(FU_finerenone, elig_finerenone) +
-          GLP1_add * FU_GLP1
-      )
-  ) %>%
-  dplyr::mutate(
-    add_SGLT = sglt2_add * pmax(FU_SGLT2, elig_SGLT2i_total),
-    add_GLP = GLP1_add * pmax(FU_GLP1, elig_GLP1_RA),
-    add_Fin = finerenone_add * pmax(FU_finerenone, elig_finerenone),
-    max_eff = pmax(add_SGLT, add_GLP, add_Fin),
-    egfr_slope_partialAdd =
-      pmin(
-        smallest_possible_egfr,
-        egfr_slope_plcb +
-          if_else(add_SGLT == max_eff, add_SGLT, 0.5 * add_SGLT) +
-          if_else(add_GLP == max_eff, add_GLP, 0.5 * add_GLP) +
-          if_else(add_Fin == max_eff, add_Fin, 0.5 * add_Fin)
-      )
-  ) %>%
-  dplyr::mutate(
-    years_to_RF_curr =
-      eGFR_min_to10 / (-1 * (egfr_slope)),
-    years_to_RF_pot =
-      eGFR_min_to10 / (-1 * (egfr_slope_potential)),
-    years_to_RF_partial =
-      eGFR_min_to10 / (-1 * (egfr_slope_partialAdd)),
-    years_to_RF_pot_SGLT =
-      eGFR_min_to10 / (-1 * (egfr_slope_pot_SGLT)),
-    years_to_RF_pot_GLP =
-      eGFR_min_to10 / (-1 * (egfr_slope_pot_GLP)),
-    years_to_RF_pot_fin =
-      eGFR_min_to10 / (-1 * (egfr_slope_pot_finerenone))
-  ) %>%
-  dplyr::mutate(
-    years_to_RF_curr = if_else(
-      years_to_RF_curr > 0, years_to_RF_curr, 0
-    ),
-    years_to_RF_pot = if_else(
-      years_to_RF_pot > 0, years_to_RF_pot, 0
-    ),
-    years_to_RF_partial = if_else(
-      years_to_RF_partial > 0, years_to_RF_partial, 0
-    ),
-    years_to_RF_pot_SGLT = if_else(
-      years_to_RF_pot_SGLT > 0, years_to_RF_pot_SGLT, 0
-    ),
-    years_to_RF_pot_GLP = if_else(
-      years_to_RF_pot_GLP > 0, years_to_RF_pot_GLP, 0
-    ),
-    years_to_RF_pot_fin = if_else(
-      years_to_RF_pot_fin > 0, years_to_RF_pot_fin, 0
-    )
-  ) %>%
-  dplyr::mutate(
-    DialysisMonthsSaved_byTreat =
-      (years_to_RF_pot - years_to_RF_curr) * 12,
-    DialysisMonthsSaved_byTreatPartial =
-      (years_to_RF_partial - years_to_RF_curr) * 12,
-    DialysisMonthsSaved_bySGLT =
-      (years_to_RF_pot_SGLT - years_to_RF_curr) * 12,
-    DialysisMonthsSaved_byGLP =
-      (years_to_RF_pot_GLP - years_to_RF_curr) * 12,
-    DialysisMonthsSaved_byFin =
-      (years_to_RF_pot_fin - years_to_RF_curr) * 12
-  )
-
-summary(data_ckd)
-
 ```
 
 ## Survival
@@ -2998,80 +5013,245 @@ legend(
 )
 ```
 
-## Add expected survival and dialysis saved
+### Function to get dialysis-free survival prediction
 
 ```{r}
 
-data_ckd <- data_ckd %>% 
+
+
+sf_patient <- survival::survfit(
+  model_surv,
+  newdata = data_ckd
+)
+
+surv_horizon <- max(
+  sf_patient$time,
+  na.rm = TRUE
+)
+
+surv_horizon
+
+stopifnot(
+  ncol(sf_patient$surv) == nrow(data_ckd)
+)
+
+
+
+calc_expected_dialysis_free <- function(sf_object, time_to_RF, horizon) {
+  
+  tau_all <- pmin(pmax(time_to_RF, 0), horizon)
+  
+  purrr::map_dbl(seq_along(tau_all), function(i) {
+    
+    tau <- tau_all[i]
+    
+    if (is.na(tau)) {
+      return(NA_real_)
+    }
+    
+    idx <- sf_object$time < tau
+    
+    time_points <- c(0, sf_object$time[idx], tau)
+    survival_prob <- c(1, sf_object$surv[idx, i])
+    
+    sum(diff(time_points) * survival_prob)
+  })
+}
+
+
+```
+
+## Individual eGFR slopes and individual years on dialysis saved
+
+```{r}
+smallest_possible_egfr <- -0.5
+
+
+data_ckd <- data_ckd %>%
   dplyr::mutate(
-    expct_surv =  pred_cox
-  ) %>% 
+    eGFR_min_to10 = dplyr::if_else(
+      eGFR_min > 10,
+      eGFR_min - 10,
+      0
+    )
+  ) %>%
   dplyr::mutate(
-    years_to_RF_curr_SurvCorr = 
-      pmin(years_to_RF_curr, expct_surv),
-    
-    years_to_RF_pot_SurvCorr = 
-      pmin(years_to_RF_pot, expct_surv),
-    
-    years_to_RF_partial_SurvCorr = 
-      pmin(years_to_RF_partial, expct_surv),
-    
-    years_to_RF_pot_SGLT_SurvCorr = 
-      pmin(years_to_RF_pot_SGLT, expct_surv),
-    
-    years_to_RF_pot_GLP_SurvCorr = 
-      pmin(years_to_RF_pot_GLP, expct_surv),
-    
-    years_to_RF_pot_fin_SurvCorr = 
-      pmin(years_to_RF_pot_fin, expct_surv),
-    
-  ) %>% 
+    egfr_slope = pmin(
+      smallest_possible_egfr,
+      egfr_slope_plcb +
+        sglt2_add * FU_SGLT2 +
+        finerenone_add * FU_finerenone +
+        GLP1_add * FU_GLP1
+    ),
+    egfr_slope_potential = pmin(
+      smallest_possible_egfr,
+      egfr_slope_plcb +
+        sglt2_add * pmax(FU_SGLT2, elig_SGLT2i_total) +
+        finerenone_add * pmax(FU_finerenone, elig_finerenone) +
+        GLP1_add * pmax(FU_GLP1, elig_GLP1_RA)
+    ),
+    egfr_slope_pot_SGLT = pmin(
+      smallest_possible_egfr,
+      egfr_slope_plcb +
+        sglt2_add * pmax(FU_SGLT2, elig_SGLT2i_total) +
+        finerenone_add * FU_finerenone +
+        GLP1_add * FU_GLP1
+    ),
+    egfr_slope_pot_GLP = pmin(
+      smallest_possible_egfr,
+      egfr_slope_plcb +
+        sglt2_add * FU_SGLT2 +
+        finerenone_add * FU_finerenone +
+        GLP1_add * pmax(FU_GLP1, elig_GLP1_RA)
+    ),
+    egfr_slope_pot_finerenone = pmin(
+      smallest_possible_egfr,
+      egfr_slope_plcb +
+        sglt2_add * FU_SGLT2 +
+        finerenone_add * pmax(FU_finerenone, elig_finerenone) +
+        GLP1_add * FU_GLP1
+    )
+  ) %>%
+  dplyr::mutate(
+    new_SGLT = pmax(elig_SGLT2i_total - FU_SGLT2, 0),
+    new_GLP = pmax(elig_GLP1_RA - FU_GLP1, 0),
+    new_Fin = pmax(elig_finerenone - FU_finerenone, 0),
+    add_new_SGLT = sglt2_add * new_SGLT,
+    add_new_GLP = GLP1_add * new_GLP,
+    add_new_Fin = finerenone_add * new_Fin,
+    max_new_eff = pmax(add_new_SGLT, add_new_GLP, add_new_Fin),
+    egfr_slope_partialAdd = pmin(
+      smallest_possible_egfr,
+      egfr_slope +
+        if_else(
+          add_new_SGLT == max_new_eff,
+          add_new_SGLT,
+          0.5 * add_new_SGLT
+        ) +
+        if_else(
+          add_new_GLP == max_new_eff,
+          add_new_GLP,
+          0.5 * add_new_GLP
+        ) +
+        if_else(
+          add_new_Fin == max_new_eff,
+          add_new_Fin,
+          0.5 * add_new_Fin
+        )
+    )
+  ) %>%
+  dplyr::mutate(
+    years_to_RF_curr =
+      eGFR_min_to10 / (-egfr_slope),
+    years_to_RF_pot =
+      eGFR_min_to10 / (-egfr_slope_potential),
+    years_to_RF_partial =
+      eGFR_min_to10 / (-egfr_slope_partialAdd),
+    years_to_RF_pot_SGLT =
+      eGFR_min_to10 / (-egfr_slope_pot_SGLT),
+    years_to_RF_pot_GLP =
+      eGFR_min_to10 / (-egfr_slope_pot_GLP),
+    years_to_RF_pot_fin =
+      eGFR_min_to10 / (-egfr_slope_pot_finerenone)
+  ) %>%
+  dplyr::mutate(
+    years_to_RF_curr =
+      pmax(years_to_RF_curr, 0),
+    years_to_RF_pot =
+      pmax(years_to_RF_pot, 0),
+    years_to_RF_partial =
+      pmax(years_to_RF_partial, 0),
+    years_to_RF_pot_SGLT =
+      pmax(years_to_RF_pot_SGLT, 0),
+    years_to_RF_pot_GLP =
+      pmax(years_to_RF_pot_GLP, 0),
+    years_to_RF_pot_fin =
+      pmax(years_to_RF_pot_fin, 0)
+  ) %>%
+  dplyr::mutate(
+    DialysisMonthsSaved_byTreat =
+      (years_to_RF_pot - years_to_RF_curr) * 12,
+    DialysisMonthsSaved_byTreatPartial =
+      (years_to_RF_partial - years_to_RF_curr) * 12,
+    DialysisMonthsSaved_bySGLT =
+      (years_to_RF_pot_SGLT - years_to_RF_curr) * 12,
+    DialysisMonthsSaved_byGLP =
+      (years_to_RF_pot_GLP - years_to_RF_curr) * 12,
+    DialysisMonthsSaved_byFin =
+      (years_to_RF_pot_fin - years_to_RF_curr) * 12
+  )
+
+data_ckd <- data_ckd %>%
+  dplyr::mutate(
+    years_to_RF_curr_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_curr,
+        surv_horizon
+      ),
+    years_to_RF_pot_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_pot,
+        surv_horizon
+      ),
+    years_to_RF_partial_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_partial,
+        surv_horizon
+      ),
+    years_to_RF_pot_SGLT_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_pot_SGLT,
+        surv_horizon
+      ),
+    years_to_RF_pot_GLP_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_pot_GLP,
+        surv_horizon
+      ),
+    years_to_RF_pot_fin_SurvCorr =
+      calc_expected_dialysis_free(
+        sf_patient,
+        years_to_RF_pot_fin,
+        surv_horizon
+      )
+  ) %>%
   dplyr::mutate(
     DialysisMonthsSaved_byTreat_SurvCorr =
-      (years_to_RF_pot_SurvCorr - 
-         years_to_RF_curr_SurvCorr)*12,
-    
+      (years_to_RF_pot_SurvCorr -
+         years_to_RF_curr_SurvCorr) * 12,
     DialysisMonthsSaved_byTreatPartial_SurvCorr =
-      (years_to_RF_partial_SurvCorr - 
-         years_to_RF_curr_SurvCorr)*12,
-    
+      (years_to_RF_partial_SurvCorr -
+         years_to_RF_curr_SurvCorr) * 12,
     DialysisMonthsSaved_bySGLT_SurvCorr =
-      (years_to_RF_pot_SGLT_SurvCorr - 
-         years_to_RF_curr_SurvCorr)*12,
-    
+      (years_to_RF_pot_SGLT_SurvCorr -
+         years_to_RF_curr_SurvCorr) * 12,
     DialysisMonthsSaved_byGLP_SurvCorr =
-      (years_to_RF_pot_GLP_SurvCorr - 
-         years_to_RF_curr_SurvCorr)*12,
-    
+      (years_to_RF_pot_GLP_SurvCorr -
+         years_to_RF_curr_SurvCorr) * 12,
     DialysisMonthsSaved_byFin_SurvCorr =
-      (years_to_RF_pot_fin_SurvCorr - 
-         years_to_RF_curr_SurvCorr)*12,
-    
-    
-  ) %>% 
-  dplyr::mutate(
-    DialysisMonthsSaved_byTreat_SurvCorr = if_else(
-      DialysisMonthsSaved_byTreat_SurvCorr > 0,
-      DialysisMonthsSaved_byTreat_SurvCorr, 0),
-    
-    DialysisMonthsSaved_byTreatPartial_SurvCorr = if_else(
-      DialysisMonthsSaved_byTreatPartial_SurvCorr > 0,
-      DialysisMonthsSaved_byTreatPartial_SurvCorr, 0),  
-    
-    DialysisMonthsSaved_bySGLT_SurvCorr = if_else(
-      DialysisMonthsSaved_bySGLT_SurvCorr > 0,
-      DialysisMonthsSaved_bySGLT_SurvCorr, 0),
-    
-    DialysisMonthsSaved_byFin_SurvCorr = if_else(
-      DialysisMonthsSaved_byFin_SurvCorr > 0,
-      DialysisMonthsSaved_byFin_SurvCorr, 0),
-    
-    DialysisMonthsSaved_byGLP_SurvCorr = if_else(
-      DialysisMonthsSaved_byGLP_SurvCorr > 0,
-      DialysisMonthsSaved_byGLP_SurvCorr, 0)
-    )
+      (years_to_RF_pot_fin_SurvCorr -
+         years_to_RF_curr_SurvCorr) * 12
+  )
 
-summary(data_ckd)
+summary(
+  data_ckd %>%
+    dplyr::select(
+      years_to_RF_curr_SurvCorr,
+      years_to_RF_pot_SurvCorr,
+      years_to_RF_partial_SurvCorr,
+      DialysisMonthsSaved_byTreat_SurvCorr,
+      DialysisMonthsSaved_byTreatPartial_SurvCorr,
+      DialysisMonthsSaved_bySGLT_SurvCorr,
+      DialysisMonthsSaved_byGLP_SurvCorr,
+      DialysisMonthsSaved_byFin_SurvCorr
+    )
+)
+
 ```
 
 ## Tabular results
@@ -3362,6 +5542,7 @@ p2 <- data_ckd %>%
 cowplot::plot_grid(p1, p2, rel_widths = c(0.4, 0.6), labels = 'AUTO')
 
 ```
+
 
 # Reproducibility
 
