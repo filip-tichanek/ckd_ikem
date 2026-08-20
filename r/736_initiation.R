@@ -85,7 +85,159 @@ invisible(
 seeding <- 736
 set.seed(seeding)
 
-## Upload data
+
+## check sums
+
+data_ckd <- readxl::read_excel(
+  "~/1_ticf_sec/736_ZAHI_CKD/gitignore/data/mastertable 14_11.xlsx"
+) %>% 
+  dplyr::rename(
+    patient_id = PatientAmb,
+    organ = organ,
+    age = age,
+    sex = sex,
+    BMI_last = BMIlast,
+    consent = consent,
+    date_sampling = `datum odberu`,
+    uACR_value = uACRValue,
+    eGFR_value = eGFRValue,
+    ACR_quant = `ACR...10`,
+    GFR_quant = `GFR...11`,
+    classification = klasifikace,
+    transplant = Tx,
+    nephrology_disp = `nephro disp`,
+    FU_DM = FU_DM,
+    FU_DM1 = FU_DM1,
+    FU_DM2 = FU_DM2,
+    FU_atherosclerosis = `FU_ateroskleroza`,
+    ischemic_heart_disease = `Ischemická choroba srdeční`,
+    FU_steatosis = FU_steatoza,
+    FU_hypertension = `FU_hypertenze`,
+    FU_atrial_fibrillation = FU_FIS,
+    FU_heart_failure = FU_SS,
+    FU_charlson_index = FU_CCI,
+    FU_GLP1 = FU_GLP1,
+    FU_SGLT2 = FU_SGLT2,
+    FU_RAASi = FU_RAASi,
+    FU_finerenone = FU_finerenon,
+    previous_ACR_positive = `Previous ACR positive`,
+    previous_low_GFR = `Previous low GFR`,
+    CKD_record = `CKD zaznam`,
+    identified_CKD_by_lab = `Identified CKD by lab`,
+    CKD_previous = `Previous CKD`,
+    total_CKD = `Total CKD`,
+    elig_RAASi_all = `Elig_RAASi all`,
+    elig_RAASi_ACR_pos = `Elig_RAASi ACR+`,
+    elig_SGLT2i_HF = `Elig_SGLT2i HF`,
+    elig_SGLT2i_nonDM = `Elig_SGLT2i non-DM`,
+    elig_SGLT2i_DM = `Elig_SGLT2i DM`,
+    elig_SGLT2i_nephro = `Elig_SGLT2i nephro`,
+    elig_SGLT2i_total = `Elig_SGLT_22i total`,
+    elig_GLP1_RA = `Elig_GLP1 RA`,
+    elig_finerenone = `Elig_Finerenone`,
+    age_cat = age_cat,
+    ACR_text = `ACR...45`,
+    eGFR_text = `GFR...46`,
+    comb = comb,
+    ACR_in_past_2y = `ACR in past 2 years`,
+    total_CKD2 = `Total CKD2`,
+    new_cases = `New cases`,
+    FU_CCI_CKD = `FU_CCI+CKD`,
+    FU_stroke = FU_iktus,
+    FU_PAD = FU_ICHDK
+  ) %>% 
+  dplyr::mutate(
+    patient_id = factor(patient_id),
+    organ = factor(organ),
+    sex = factor(sex),
+    ACR_quant = factor(ACR_quant, ordered = TRUE),
+    GFR_quant = factor(GFR_quant, ordered = TRUE),
+    classification = factor(classification),
+    age_cat = factor(age_cat, ordered = TRUE),
+    ACR_text = factor(ACR_text),
+    GFR_text = factor(eGFR_text),
+    comb = factor(comb),
+    date_sampling = as.Date(date_sampling),
+    previous_ACR_positive = if_else(
+      is.na(previous_ACR_positive), 0, previous_ACR_positive
+    ),
+    previous_low_GFR = if_else(
+      is.na(previous_low_GFR), 0, previous_low_GFR
+    ),
+    elig_SGLT2i_nonDM = if_else(
+      is.na(elig_SGLT2i_nonDM), 0, elig_SGLT2i_nonDM
+    ),
+    elig_SGLT2i_DM = if_else(
+      is.na(elig_SGLT2i_DM), 0, elig_SGLT2i_DM
+    )
+  ) %>% 
+  dplyr::select(
+    patient_id, 
+    date_sampling, consent, age, sex,
+    uACR_value, ACR_text, eGFR_value, GFR_text, identified_CKD_by_lab,
+    CKD_record, CKD_previous, total_CKD,
+    new_cases,
+    transplant, 
+    BMI_last, FU_stroke:FU_PAD,
+    FU_DM:FU_finerenone,
+    elig_RAASi_all, elig_SGLT2i_total, 
+    elig_GLP1_RA, elig_finerenone
+  )
+
+tr  <- data_ckd |> 
+  dplyr::mutate(
+    identified_CKD_by_lab = factor(identified_CKD_by_lab),
+    CKD_record = factor(CKD_record),
+    CKD_previous = factor(CKD_previous),
+    new_cases = factor(new_cases),
+    total_CKD = factor(total_CKD)
+    ) |>
+  dplyr::mutate(
+    CKD_previous_adj = factor(
+      if_else(
+        (identified_CKD_by_lab == 1 & new_cases == 0), "1", CKD_previous
+      )
+    )
+    ) |>
+  dplyr::mutate(
+    all_cases = factor(
+      if_else(
+        (identified_CKD_by_lab == 1 | CKD_previous_adj == 1), 1, 0
+      )
+    ),
+    ckd_notNew = factor(
+      if_else(
+        ( (identified_CKD_by_lab == 1) & (new_cases == 0)), 1, 0
+      )
+    ),
+    ckd_previous_notnow = factor(
+      if_else(
+        ( (identified_CKD_by_lab == 0) & (CKD_previous_adj == 1)), 1, 0
+      )
+    )
+  ) |>
+  dplyr::select(
+    patient_id, consent, ACR_text, GFR_text, 
+    identified_CKD_by_lab:new_cases,
+    all_cases:ckd_previous_notnow, CKD_previous_adj
+  ) |> data.frame()
+
+summary(tr)
+
+
+
+summary(tr |> filter(identified_CKD_by_lab == 0))
+
+tr |> filter(new_cases == 1, CKD_previous == 1)
+
+tr |> filter(identified_CKD_by_lab == 0, new_cases == 1)
+
+tr |> filter(ckd_previous_notnow == 1, CKD_previous_adj == 0)
+tr |> filter(ckd_notNew == 1, CKD_previous_adj == 0)
+tr |> filter(new_cases == 1, CKD_previous_adj == 1)
+
+## Upload final data
+
 if(!file.exists('data/data_ckd.rds')){
   data_ckd <- readxl::read_excel(
     "~/1_ticf_sec/736_ZAHI_CKD/gitignore/data/mastertable 14_11.xlsx"
@@ -173,7 +325,7 @@ if(!file.exists('data/data_ckd.rds')){
     dplyr::select(
       date_sampling, consent, age, sex,
       uACR_value, ACR_text, eGFR_value, eGFR_text, identified_CKD_by_lab,
-      CKD_record, 
+      CKD_record,
       new_cases,
       transplant, 
       BMI_last, FU_stroke:FU_PAD,
@@ -188,6 +340,7 @@ if(!file.exists('data/data_ckd.rds')){
 
 data_ckd <- readRDS('data/data_ckd.rds')
 data_survival <- readRDS('data/data_survival.rds')
+
 
 
 
