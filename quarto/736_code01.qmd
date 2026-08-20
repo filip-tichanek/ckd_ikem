@@ -397,7 +397,10 @@ p <- ComplexUpset::upset(
   themes = my_themes
 )
 
-p + patchwork::plot_layout(
+plotac <- "sup_figure_upset_comorbidities"
+path <- "gitignore/figures"
+
+fig <- p + patchwork::plot_layout(
   heights = c(
     0.5,
     1,
@@ -405,6 +408,22 @@ p + patchwork::plot_layout(
   )
 )
 
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 8,
+    height = 5.5
+  )
+}
 ```
 
 # Precision-based sample size calculation
@@ -445,32 +464,86 @@ prop
 ## 90% probability that 95% CI width ≤ 5%
 
 ```{r}
+plotac <- "suppl_fig_1"
+path <- "gitignore/figures"
 
-sim_prec <- function(size, probs, reps = 2000, ci_width = 0.05){
+sim_prec <- function(size, probs, reps = 2000, ci_width = 0.05) {
   x <- rbinom(n = reps, size = size, prob = probs)
-  ciw <- vapply(x, function(xx){
-    ci <- binom.test(xx, size)$conf.int
-    ci[2] - ci[1]
-  }, numeric(1))
-  mean(ciw < ci_width)
+
+  ciw <- vapply(
+    x,
+    function(xx) {
+      ci <- binom.test(xx, size)$conf.int
+      ci[2] - ci[1]
+    },
+    numeric(1)
+  )
+
+  mean(ciw <= ci_width)
 }
 
 sizes <- seq(1000, 2000, by = 25)
 
 res <- mclapply(
   sizes,
-  function(n) data.frame(n = n, power = sim_prec(n, probs = prop, reps = 2000)),
+  function(n) {
+    data.frame(
+      n = n,
+      precision_probability = sim_prec(
+        n,
+        probs = prop,
+        reps = 2000
+      )
+    )
+  },
   mc.cores = detectCores() - 1
-) %>% dplyr::bind_rows()
+) %>%
+  dplyr::bind_rows()
 
 kableExtra::kable(res)
 
-ggplot(res, aes(x = n, y = power)) +
+fig <- ggplot(
+  res,
+  aes(
+    x = n,
+    y = precision_probability
+  )
+) +
   geom_line() +
   geom_point() +
-  geom_hline(yintercept = 0.9, linetype = 2) +
-  scale_x_continuous(breaks = seq(1000, 2000, by = 100)) +
+  geom_hline(
+    yintercept = 0.9,
+    linetype = 2
+  ) +
+  scale_x_continuous(
+    breaks = seq(1000, 2000, by = 100)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  labs(
+    x = "Sample size",
+    y = "Probability of achieving target precision"
+  ) +
   theme_minimal()
+
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 8,
+    height = 5.5
+  )
+}
 
 ```
 
@@ -1345,12 +1418,14 @@ kableExtra::kable(
 #### Visualisation, screening + conditional enriched
 
 ```{r, fig.height=5, fig.width=6.5}
+plotac <- "fig_3"
+path <- "gitignore/figures"
 
-data_forest %>%
+fig <- data_forest %>%
   dplyr::filter(
-    cohort != 'unscreened', 
-     cohort != 'enriched_marginal' 
-  ) |>
+    cohort != "unscreened",
+    cohort != "enriched_marginal"
+  ) %>%
   dplyr::mutate(
     predictor = dplyr::recode(
       predictor,
@@ -1359,18 +1434,14 @@ data_forest %>%
       "FU_DM1" = "T1DM",
       "FU_DM2" = "T2DM",
       "FU_hypertension" = "Arterial hypertension",
-      "HF_or_AF" = "Heart failure or atrial fibrilation",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
       "FU_atherosclerosis" = "ASCVD",
       "FU_steatosis" = "Liver steatosis",
       "sex_female" = "Female"
     ),
     predictor = factor(
       predictor,
-      levels = rev(
-        unique(
-          predictor
-        )
-      )
+      levels = rev(unique(predictor))
     ),
     cohort = factor(
       cohort,
@@ -1396,9 +1467,7 @@ data_forest %>%
     )
   ) +
   ggplot2::geom_point(
-    position = ggplot2::position_dodge(
-      width = 0.6
-    ),
+    position = ggplot2::position_dodge(width = 0.6),
     size = 2
   ) +
   ggplot2::geom_errorbarh(
@@ -1406,9 +1475,7 @@ data_forest %>%
       xmin = CI_L,
       xmax = CI_U
     ),
-    position = ggplot2::position_dodge(
-      width = 0.6
-    ),
+    position = ggplot2::position_dodge(width = 0.6),
     height = 0.3
   ) +
   ggplot2::geom_vline(
@@ -1417,22 +1484,8 @@ data_forest %>%
     color = "gray40"
   ) +
   ggplot2::scale_x_log10(
-    breaks = c(
-      1 / 4,
-      1 / 2,
-      1,
-      2,
-      4,
-      8
-    ),
-    labels = c(
-      "1/4",
-      "1/2",
-      "1",
-      "2",
-      "4",
-      "8"
-    )
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
+    labels = c("1/4", "1/2", "1", "2", "4", "8")
   ) +
   ggplot2::scale_color_manual(
     values = c(
@@ -1448,30 +1501,41 @@ data_forest %>%
     color = NULL
   ) +
   ggplot2::guides(
-    color = ggplot2::guide_legend(
-      nrow = 1
-    )
+    color = ggplot2::guide_legend(nrow = 1)
   ) +
-  ggplot2::theme_minimal(
-    base_size = 12
-  ) +
+  ggplot2::theme_minimal(base_size = 12) +
   ggplot2::theme(
     legend.position = "top",
-    axis.text.y = ggplot2::element_text(
-      size = 11
-    ),
-    legend.text = ggplot2::element_text(
-      size = 10
-    )
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
   )
 
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 6.5,
+    height = 5
+  )
+}
 ```
 
 #### Visualisation, full
 
 ```{r, fig.height=5, fig.width=6.5}
 
-data_forest %>%
+plotac <- "suppl_fig_3"
+path <- "gitignore/figures"
+
+fig <- data_forest %>%
   dplyr::mutate(
     predictor = dplyr::recode(
       predictor,
@@ -1480,18 +1544,14 @@ data_forest %>%
       "FU_DM1" = "T1DM",
       "FU_DM2" = "T2DM",
       "FU_hypertension" = "Arterial hypertension",
-      "HF_or_AF" = "Heart failure or atrial fibrilation",
+      "HF_or_AF" = "Heart failure or atrial fibrillation",
       "FU_atherosclerosis" = "ASCVD",
       "FU_steatosis" = "Liver steatosis",
       "sex_female" = "Female"
     ),
     predictor = factor(
       predictor,
-      levels = rev(
-        unique(
-          predictor
-        )
-      )
+      levels = rev(unique(predictor))
     ),
     cohort = factor(
       cohort,
@@ -1517,9 +1577,7 @@ data_forest %>%
     )
   ) +
   ggplot2::geom_point(
-    position = ggplot2::position_dodge(
-      width = 0.6
-    ),
+    position = ggplot2::position_dodge(width = 0.6),
     size = 2
   ) +
   ggplot2::geom_errorbarh(
@@ -1527,9 +1585,7 @@ data_forest %>%
       xmin = CI_L,
       xmax = CI_U
     ),
-    position = ggplot2::position_dodge(
-      width = 0.6
-    ),
+    position = ggplot2::position_dodge(width = 0.6),
     height = 0.3
   ) +
   ggplot2::geom_vline(
@@ -1538,22 +1594,8 @@ data_forest %>%
     color = "gray40"
   ) +
   ggplot2::scale_x_log10(
-    breaks = c(
-      1 / 4,
-      1 / 2,
-      1,
-      2,
-      4,
-      8
-    ),
-    labels = c(
-      "1/4",
-      "1/2",
-      "1",
-      "2",
-      "4",
-      "8"
-    )
+    breaks = c(1 / 4, 1 / 2, 1, 2, 4, 8),
+    labels = c("1/4", "1/2", "1", "2", "4", "8")
   ) +
   ggplot2::scale_color_manual(
     values = c(
@@ -1569,22 +1611,31 @@ data_forest %>%
     color = NULL
   ) +
   ggplot2::guides(
-    color = ggplot2::guide_legend(
-      nrow = 2
-    )
+    color = ggplot2::guide_legend(nrow = 2)
   ) +
-  ggplot2::theme_minimal(
-    base_size = 12
-  ) +
+  ggplot2::theme_minimal(base_size = 12) +
   ggplot2::theme(
     legend.position = "top",
-    axis.text.y = ggplot2::element_text(
-      size = 11
-    ),
-    legend.text = ggplot2::element_text(
-      size = 10
-    )
+    axis.text.y = ggplot2::element_text(size = 11),
+    legend.text = ggplot2::element_text(size = 10)
   )
+
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 6.5,
+    height = 5
+  )
+}
 
 ```
 
@@ -2503,10 +2554,16 @@ prediction %>%
 #### Joint visualisation -- screening cohort
 
 ```{r, fig.width=5.5, fig.height=7}
-prediction <- bind_rows(prediction_NL, prediction_NL_AgeCal)
+plotac <- "suppl_fig_6"
+path <- "gitignore/figures"
 
-prediction %>% 
-  dplyr::filter(cohort == 'screening') %>% 
+prediction <- bind_rows(
+  prediction_NL,
+  prediction_NL_AgeCal
+)
+
+fig <- prediction %>%
+  dplyr::filter(cohort == "screening") %>%
   ggplot(
     aes(
       x = age,
@@ -2534,25 +2591,44 @@ prediction %>%
   ) +
   scale_color_manual(
     values = c(
-        "No calibration" = "pink3",
-        "Age calibrated" = "cyan3"
+      "No calibration" = "pink3",
+      "Age calibrated" = "cyan3"
     ),
     name = "Age calibration"
   ) +
   scale_fill_manual(
-     values = c(
-        "No calibration" = "pink3",
-        "Age calibrated" = "cyan3"
+    values = c(
+      "No calibration" = "pink3",
+      "Age calibrated" = "cyan3"
     ),
     name = "Age calibration"
   ) +
-  facet_grid(rows = vars(age_calibrated)) +
+  facet_grid(
+    rows = vars(age_calibrated)
+  ) +
   theme(
     axis.text = element_text(size = 13),
     axis.title = element_text(size = 14),
     strip.text = element_text(size = 14),
     legend.position = "none"
   )
+
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 5.5,
+    height = 7
+  )
+}
 ```
 
 ### Risk factors model
@@ -2970,7 +3046,10 @@ data_forest %>%
 #### Visualisation, all
 
 ```{r, fig.height=5, fig.width=6.5}
-data_forest %>%
+plotac <- "suppl_fig_7"
+path <- "gitignore/figures"
+
+fig <- data_forest %>%
   dplyr::mutate(
     predictor = dplyr::recode(
       predictor,
@@ -3062,6 +3141,23 @@ data_forest %>%
     axis.text.y = ggplot2::element_text(size = 11),
     legend.text = ggplot2::element_text(size = 10)
   )
+
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 6.5,
+    height = 5
+  )
+}
 ```
 
 #### Sensitivity analysis
@@ -4302,7 +4398,10 @@ data_forest %>%
 
 ```{r, fig.height=5, fig.width=6.5}
 
-data_forest %>%
+plotac <- "suppl_fig_5"
+path <- "gitignore/figures"
+
+fig <- data_forest %>%
   dplyr::mutate(
     predictor = dplyr::recode(
       predictor,
@@ -4394,6 +4493,23 @@ data_forest %>%
     axis.text.y = ggplot2::element_text(size = 11),
     legend.text = ggplot2::element_text(size = 10)
   )
+
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 6.5,
+    height = 5
+  )
+}
 
 ```
 
@@ -5437,28 +5553,44 @@ data_ckd %>%
 #| fig.cap: '(A) Proportion of patients with CKD with a positive model-projected gain in dialysis-free time under optimized renoprotective treatment. (B) Distribution of the model-projected gain in dialysis-free time (months) among patients with a positive projected gain'
 
 
+plotac <- "fig_4"
+path <- "gitignore/figures"
+
 tr <- data_ckd %>%
   filter(identified_CKD_by_lab == 1) %>%
-  mutate(delay_expected = factor(DialysisMonthsSaved_byTreat_SurvCorr > 0)) %>% 
-  select(delay_expected)
+  mutate(
+    projected_gain = factor(
+      DialysisMonthsSaved_byTreat_SurvCorr > 0
+    )
+  ) %>%
+  select(projected_gain)
 
 summary(tr)
-mean(tr$delay_expected == "TRUE", na.rm = TRUE)
+mean(tr$projected_gain == "TRUE", na.rm = TRUE)
 
 p1 <- data_ckd %>%
   filter(identified_CKD_by_lab == 1) %>%
-  mutate(delay_expected = DialysisMonthsSaved_byTreat_SurvCorr > 0) %>%
-  ggplot(aes(x = factor(1), fill = delay_expected)) +
+  mutate(
+    projected_gain = DialysisMonthsSaved_byTreat_SurvCorr > 0
+  ) %>%
+  ggplot(
+    aes(
+      x = factor(1),
+      fill = projected_gain
+    )
+  ) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent
+  ) +
   scale_fill_manual(
     values = c(
       `FALSE` = "#F4A8A8",
-      `TRUE`  = "#A8E6A1"
+      `TRUE` = "#A8E6A1"
     ),
     labels = c(
       `FALSE` = "Not expected",
-      `TRUE`  = "Expected"
+      `TRUE` = "Expected"
     )
   ) +
   labs(
@@ -5471,25 +5603,56 @@ p1 <- data_ckd %>%
     axis.ticks.x = element_blank()
   )
 
-
 p2 <- data_ckd %>%
   filter(
     identified_CKD_by_lab == 1,
     DialysisMonthsSaved_byTreat_SurvCorr > 0
   ) %>%
-  ggplot(aes(x = DialysisMonthsSaved_byTreat_SurvCorr)) +
+  ggplot(
+    aes(
+      x = DialysisMonthsSaved_byTreat_SurvCorr
+    )
+  ) +
   geom_histogram(
-    breaks = seq(0, max(data_ckd$DialysisMonthsSaved_byTreat_SurvCorr, na.rm = TRUE), by = 10),
+    breaks = seq(
+      0,
+      max(
+        data_ckd$DialysisMonthsSaved_byTreat_SurvCorr,
+        na.rm = TRUE
+      ),
+      by = 10
+    ),
     fill = "#A8E6A1",
     color = "#4C8A4A"
   ) +
   labs(
-    x = "Dialysis months delayed",
+    x = "Projected gain in dialysis-free time (months)",
     y = "Number of CKD patients"
   )
 
-cowplot::plot_grid(p1, p2, rel_widths = c(0.4, 0.6), labels = 'AUTO')
+fig <- cowplot::plot_grid(
+  p1,
+  p2,
+  rel_widths = c(0.4, 0.6),
+  labels = "AUTO"
+)
 
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 7,
+    height = 4
+  )
+}
 ```
 
 ### Partial additivity
@@ -5497,20 +5660,32 @@ cowplot::plot_grid(p1, p2, rel_widths = c(0.4, 0.6), labels = 'AUTO')
 ```{r, fig.width=7, fig.height=4}
 #| fig.cap: '(A) Proportion of patients with CKD with a positive model-projected gain in dialysis-free time under optimized renoprotective treatment assuming partially additive treatment effects. (B) Distribution of the model-projected gain in dialysis-free time (months) among patients with a positive projected gain'
 
+plotac <- "suppl_fig_8"
+path <- "gitignore/figures"
+
 p1 <- data_ckd %>%
   filter(identified_CKD_by_lab == 1) %>%
-  mutate(delay_expected = DialysisMonthsSaved_byTreatPartial_SurvCorr > 0) %>%
-  ggplot(aes(x = factor(1), fill = delay_expected)) +
+  mutate(
+    projected_gain = DialysisMonthsSaved_byTreatPartial_SurvCorr > 0
+  ) %>%
+  ggplot(
+    aes(
+      x = factor(1),
+      fill = projected_gain
+    )
+  ) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent
+  ) +
   scale_fill_manual(
     values = c(
       `FALSE` = "#F4A8A8",
-      `TRUE`  = "#A8E6A1"
+      `TRUE` = "#A8E6A1"
     ),
     labels = c(
       `FALSE` = "Not expected",
-      `TRUE`  = "Expected"
+      `TRUE` = "Expected"
     )
   ) +
   labs(
@@ -5523,25 +5698,56 @@ p1 <- data_ckd %>%
     axis.ticks.x = element_blank()
   )
 
-
 p2 <- data_ckd %>%
   filter(
     identified_CKD_by_lab == 1,
     DialysisMonthsSaved_byTreatPartial_SurvCorr > 0
   ) %>%
-  ggplot(aes(x = DialysisMonthsSaved_byTreatPartial_SurvCorr)) +
+  ggplot(
+    aes(
+      x = DialysisMonthsSaved_byTreatPartial_SurvCorr
+    )
+  ) +
   geom_histogram(
-    breaks = seq(0, max(data_ckd$DialysisMonthsSaved_byTreatPartial_SurvCorr, na.rm = TRUE), by = 10),
+    breaks = seq(
+      0,
+      max(
+        data_ckd$DialysisMonthsSaved_byTreatPartial_SurvCorr,
+        na.rm = TRUE
+      ),
+      by = 10
+    ),
     fill = "#A8E6A1",
     color = "#4C8A4A"
   ) +
   labs(
-    x = "Dialysis months delayed",
+    x = "Projected gain in dialysis-free time (months)",
     y = "Number of CKD patients"
   )
 
-cowplot::plot_grid(p1, p2, rel_widths = c(0.4, 0.6), labels = 'AUTO')
+fig <- cowplot::plot_grid(
+  p1,
+  p2,
+  rel_widths = c(0.4, 0.6),
+  labels = "AUTO"
+)
 
+fig
+
+if (!dir.exists(path)) {
+  dir.create(path, recursive = TRUE)
+}
+
+if (!file.exists(file.path(path, paste0(plotac, ".pdf")))) {
+  ggplot2::ggsave(
+    filename = paste0(plotac, ".pdf"),
+    plot = fig,
+    path = path,
+    device = "pdf",
+    width = 7,
+    height = 4
+  )
+}
 ```
 
 
