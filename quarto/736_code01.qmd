@@ -1,5 +1,5 @@
 ---
-title: "Chronic Kidney Disease Among Outpatients in a Central European Tertiary Care Centre: High Prevalence and Inadequate Treatment"
+title: "Prevalence, Risk Factors and Renoprotective Treatment of Chronic Kidney Disease Among Internal Medicine Outpatients at a Central European Tertiary Care Centre: A Cross-Sectional Study"
 subtitle: "Statistical report"
 format: 
   html:  
