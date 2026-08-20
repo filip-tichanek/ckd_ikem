@@ -16,7 +16,7 @@ Ivan Zahradka<sup>1</sup>, Vojtech Petr<sup>1</sup>, Filip Tichanek<sup>2</sup>,
           
 ---------------------------------------------------------------------------------------------------
 
-This is a statistical report of the study of Zahradka et al., *Chronic Kidney Disease Among Outpatients in a Central European Tertiary Care Centre: High Prevalence and Inadequate Treatment*.
+This is a statistical report of the study of Zahradka et al., *Prevalence, Risk Factors and Renoprotective Treatment of Chronic Kidney Disease Among Internal Medicine Outpatients at a Central European Tertiary Care Centre: A Cross-Sectional Study*.
 
 When using this code or data, cite the original publication:
 
