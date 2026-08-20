@@ -3051,7 +3051,7 @@ data_forest %>%
   ) +
   ggplot2::guides(
     color = ggplot2::guide_legend(
-      nrow = 1
+      nrow = 2
     )
   ) +
   ggplot2::theme_minimal(
@@ -4383,7 +4383,7 @@ data_forest %>%
   ) +
   ggplot2::guides(
     color = ggplot2::guide_legend(
-      nrow = 1
+      nrow = 2
     )
   ) +
   ggplot2::theme_minimal(
@@ -5434,7 +5434,8 @@ data_ckd %>%
 ### Full additivity
 
 ```{r, fig.width=7, fig.height=4}
-#| fig.cap: '(A) proportion of CKD patients for whom any delay in initiation of dialysis is expected based on predicted survival and eGFR slope. (B) distribution of the predicted dialysis delay (months) among patients with an expected delay' 
+#| fig.cap: '(A) Proportion of patients with CKD with a positive model-projected gain in dialysis-free time under optimized renoprotective treatment. (B) Distribution of the model-projected gain in dialysis-free time (months) among patients with a positive projected gain'
+
 
 tr <- data_ckd %>%
   filter(identified_CKD_by_lab == 1) %>%
@@ -5463,7 +5464,7 @@ p1 <- data_ckd %>%
   labs(
     x = "",
     y = "Proportion of CKD patients",
-    fill = "Dialysis delay"
+    fill = "Projected gain"
   ) +
   theme(
     axis.text.x = element_blank(),
@@ -5494,7 +5495,7 @@ cowplot::plot_grid(p1, p2, rel_widths = c(0.4, 0.6), labels = 'AUTO')
 ### Partial additivity
 
 ```{r, fig.width=7, fig.height=4}
-#| fig.cap: '(A) proportion of CKD patients for whom any delay in initiation of dialysis is expected based on predicted survival and eGFR slope improved with potentential treatment. (B) distribution of the predicted dialysis delay (months) among patients with an expected delay of the dialysis' 
+#| fig.cap: '(A) Proportion of patients with CKD with a positive model-projected gain in dialysis-free time under optimized renoprotective treatment assuming partially additive treatment effects. (B) Distribution of the model-projected gain in dialysis-free time (months) among patients with a positive projected gain'
 
 p1 <- data_ckd %>%
   filter(identified_CKD_by_lab == 1) %>%
@@ -5515,7 +5516,7 @@ p1 <- data_ckd %>%
   labs(
     x = "",
     y = "Proportion of CKD patients",
-    fill = "Dialysis delay"
+    fill = "Projected gain"
   ) +
   theme(
     axis.text.x = element_blank(),
